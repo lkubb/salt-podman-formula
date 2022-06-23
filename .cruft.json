@@ -1,0 +1,77 @@
+{
+  "template": "https://github.com/lkubb/salt-template-formula",
+  "commit": "50a694adefdf54f1ca465db433c033ca764942bc",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "_extensions": [
+        "local_extensions.YAMLDumper"
+      ],
+      "_jinja2_env_vars": {
+        "block_start_string": "{!",
+        "block_end_string": "!}",
+        "variable_start_string": "{=",
+        "variable_end_string": "=}",
+        "comment_start_string": "{@",
+        "comment_end_string": "@}"
+      },
+      "name": "Podman",
+      "abbr": "podman",
+      "abbr_pysafe": "podman",
+      "pkg": "podman",
+      "needs_repo": "y",
+      "config": "/etc/containers",
+      "service": "podman",
+      "subcomponent": "",
+      "subcomponent_config": "",
+      "git_username": "lkubb",
+      "_lookup": {
+        "config_files": {
+          "mounts": "mounts.conf",
+          "mounts_usr": "/usr/share/containers/mounts.conf",
+          "policy": "policy.json",
+          "registries": "registries.conf.d/salt.conf",
+          "seccomp": "/usr/share/containers/seccomp.json"
+        },
+        "salt_compat": {
+          "pips": [
+            "docker"
+          ],
+          "pkgs": [
+            "python3-pip"
+          ],
+          "sockets": {
+            "docker": "/var/run/docker.sock",
+            "podman": "/var/run/podman/podman.sock"
+          }
+        },
+        "service": {
+          "name": "podman",
+          "path": "/etc/systemd/system/{name}.service",
+          "socket_path": "/etc/systemd/system/{name}.socket"
+        }
+      },
+      "_settings": {
+        "install_method": "pkg",
+        "mounts": [],
+        "policy": {
+          "default": [
+            {
+              "type": "insecureAcceptAnything"
+            }
+          ]
+        },
+        "registries": {
+          "unqualified-search-registries": [
+            "docker.io"
+          ],
+          "registry": []
+        },
+        "salt_compat": false,
+        "service_enable": false
+      },
+      "_template": "https://github.com/lkubb/salt-template-formula"
+    }
+  },
+  "directory": null
+}

@@ -1,0 +1,15 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+#
+# Set mapstack sources.
+---
+values:
+  sources:
+    - "Y:G@osarch"
+    - "Y:G@os_family"
+    - "Y:G@os"
+    - "Y:G@osfinger"
+    - "C@tool_global"
+    - "C@{{ tplroot }}"
+    - "Y:G@id"
+...

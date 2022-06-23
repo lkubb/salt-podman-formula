@@ -1,0 +1,46 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+#
+# Set default values.
+---
+values:
+  lookup:
+    rootgroup: root
+    pkg:
+      name: podman
+    enablerepo:
+      stable: true
+    config: '/etc/containers'
+    config_files:
+      mounts: mounts.conf
+      mounts_usr: /usr/share/containers/mounts.conf
+      policy: policy.json
+      registries: registries.conf.d/salt.conf
+      seccomp: /usr/share/containers/seccomp.json
+    salt_compat:
+      pips:
+        - docker
+      pkgs:
+        - python3-pip
+      sockets:
+        docker: /var/run/docker.sock
+        podman: /var/run/podman/podman.sock
+    service:
+      name: podman
+      path: /etc/systemd/system/{name}.service
+      socket_path: /etc/systemd/system/{name}.socket
+  install_method: pkg
+  mounts: []
+  policy:
+    default:
+      - type: insecureAcceptAnything
+  registries:
+    registry: []
+    unqualified-search-registries:
+      - docker.io
+  salt_compat: false
+  service_enable: false
+  # Just here for testing
+  added_in_defaults: defaults_value
+  winner: defaults
+...

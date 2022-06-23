@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "podman_formula"
+version = "1.0.0"
+description = "Saltstack states to manage Podman"
+authors = ["lkubb"]
+
+[tool.poetry.dependencies]
+python = "^3.6.2"
+
+[tool.poetry.dev-dependencies]
+Sphinx = "^4"
+# this is the official saltstack theme
+# sphinx-material-saltstack = "^1.0.5"
+sphinx-rtd-theme = "^1.0.0"
+# fulltoc has an issue with recent Sphinx versions ('easily' fixable in the source code though)
+# sphinxcontrib-fulltoc = "^1.2.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
