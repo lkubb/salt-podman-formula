@@ -26,6 +26,34 @@
       "subcomponent_config": "",
       "git_username": "lkubb",
       "_lookup": {
+        "compose": {
+          "docker": {
+            "compose_version": "2.6.1",
+            "latest": {
+              "source": "https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64",
+              "hash": "https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256"
+            },
+            "legacy": {
+              "source": "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64",
+              "hash": "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256"
+            },
+            "legacy_versions": [
+              "1",
+              "2",
+              "3",
+              "4.0"
+            ]
+          },
+          "podman": {
+            "legacy_versions": [
+              "1",
+              "2",
+              "3.0"
+            ],
+            "pip": "podman-compose",
+            "pip_legacy": "podman-compose==0.1.11"
+          }
+        },
         "config_files": {
           "containers": "containers.conf",
           "mounts": "mounts.conf",
@@ -53,6 +81,7 @@
         }
       },
       "_settings": {
+        "compose": false,
         "config": {
           "global": {
             "containers": {
@@ -83,7 +112,8 @@
         },
         "install_method": "pkg",
         "salt_compat": false,
-        "service_enable": false
+        "service_enable": false,
+        "version": "latest"
       },
       "_template": "https://github.com/lkubb/salt-template-formula"
     }

@@ -10,6 +10,27 @@ podman:
     enablerepo:
       stable: true
     config: '/etc/containers'
+    compose:
+      docker:
+        compose_version: 2.6.1
+        latest:
+          hash: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256
+          source: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64
+        legacy:
+          hash: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256
+          source: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64
+        legacy_versions:
+          - '1'
+          - '2'
+          - '3'
+          - '4.0'
+      podman:
+        legacy_versions:
+          - '1'
+          - '2'
+          - '3.0'
+        pip: podman-compose
+        pip_legacy: podman-compose==0.1.11
     config_files:
       containers: containers.conf
       mounts: mounts.conf
@@ -29,6 +50,7 @@ podman:
       name: podman
       path: /etc/systemd/system/{name}.service
       socket_path: /etc/systemd/system/{name}.socket
+  compose: false
   config:
     global:
       containers:
@@ -51,6 +73,7 @@ podman:
   install_method: pkg
   salt_compat: false
   service_enable: false
+  version: latest
 
   tofs:
     # The files_switch key serves as a selector for alternative

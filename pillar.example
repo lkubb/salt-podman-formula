@@ -3,7 +3,13 @@
 # yamllint disable rule:comments-indentation
 ---
 podman:
+  version: latest
   install_method: pkg  # [system]pkg or repo (kubic only currently, discouraged)
+    # Whether to install docker-compose, podman-compose or nothing.
+    # For docker-compose, you will need to set `service_enable: true`
+    # docker, podman, false
+  compose: false
+    # Global and user-specific configuration
   config:
       # Global configuration in /etc/containers
     global:
@@ -63,6 +69,27 @@ podman:
   service_enable: false
 
   lookup:
+    compose:
+      docker:
+        compose_version: 2.6.1
+        latest:
+          hash: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256  # yamllint disable-line rule:line-length
+          source: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64  # yamllint disable-line rule:line-length
+        legacy:
+          hash: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256  # yamllint disable-line rule:line-length
+          source: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64  # yamllint disable-line rule:line-length
+        legacy_versions:
+          - '1'
+          - '2'
+          - '3'
+          - '4.0'
+      podman:
+        legacy_versions:
+          - '1'
+          - '2'
+          - '3.0'
+        pip: podman-compose
+        pip_legacy: podman-compose==0.1.11
     config_files:
       containers: containers.conf
       mounts: mounts.conf

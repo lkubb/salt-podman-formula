@@ -18,6 +18,7 @@ include:
 podman-package-install-pkg-installed:
   pkg.installed:
     - name: {{ podman.lookup.pkg.name }}
+    - version: {{ podman.version }}
 
 Toml python library is installed:
   pip.installed:
@@ -62,3 +63,24 @@ Podman unit files are installed:
       - file: {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
       - file: {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
 {%-   endif %}
+
+{%- if podman.compose %}
+{%-   if "docker" == podman.compose %}
+
+docker-compose is installed:
+  file.managed:
+    - name: /usr/local/bin/docker-compose
+    - source: {{ podman._compose.source }}
+    - source_hash: {{ podman._compose.hash }}
+    - mode: '0755'
+    - user: root
+    - group: {{ podman.lookup.rootgroup }}
+    - require:
+      - podman-package-install-pkg-installed
+{%-   elif "podman" == podman.compose %}
+
+podman-compose is installed:
+  pip.installed:
+    - name: {{ podman._compose }}
+{%-   endif %}
+{%- endif %}

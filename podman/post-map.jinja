@@ -1,0 +1,32 @@
+{%- set version = mapdata.version -%}
+{%- if "latest" == version -%}
+  {#- if a new repo is configured, this might resolve to the wrong version (or none -> not legacy) -#}
+  {%- set version = salt["pkg.latest_version"](mapdata.lookup.pkg.name) or salt["pkg.version"](mapdata.lookup.pkg.name) or "" -%}
+{%- endif -%}
+{%- if mapdata.compose -%}
+  {%- if "docker" == mapdata.compose -%}
+    {%- set d = mapdata.lookup.compose.docker -%}
+    {#- dumbest possible workaround for scoped variables -#}
+    {%- set is_it = {"legacy": false} -%}
+    {%- for legacy in d.legacy_versions -%}
+      {%- if version.startswith(legacy) -%}
+        {%- do is_it.update({"legacy": true}) -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- do mapdata.update({
+            "_compose": {
+              "source": d.legacy.source if is_it.legacy else d.latest.source.format(version=d.compose_version),
+              "hash": d.legacy.hash if is_it.legacy else d.latest.hash.format(version=d.compose_version)
+            }
+    }) -%}
+  {%- elif "podman" == mapdata.compose -%}
+    {%- set p = mapdata.lookup.compose.podman -%}
+    {%- set is_it = {"legacy": false} -%}
+    {%- for legacy in p.legacy_versions -%}
+      {%- if version.startswith(legacy) -%}
+        {%- do is_it.update({"legacy": true}) -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- do mapdata.update({"_compose": p.pip_legacy if is_it.legacy else p.pip}) -%}
+  {%- endif -%}
+{%- endif -%}
