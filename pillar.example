@@ -59,11 +59,13 @@ podman:
       # mapping of username to the different keys as seen in global
       # If a user does not exist, skips configuration (will not create a user)
     user: {}
-    # On Debian, it is possible to install higher versions than 3.0 (stable repo)
-    # by enabling testing/unstable. Version 4+ can be installed that way.
+    # On Debian, it is possible to install higher versions than 3.0
+    # (current stable repo) by enabling unstable/experimental.
+    # Version 3.4/4 can be installed that way.
     # Having compose enabled, this formula might still default to legacy
     # installation during the first run if version is set to latest.
-  enable_debian_unstable: false
+  debian_experimental: false
+  debian_unstable: false
     # If you want to use the Salt docker modules with podman, enable
     # this. Support is buggy. This will install `podman system service` as a
     # long-running system service.

@@ -26,7 +26,19 @@ Podman unit files are absent:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
       - {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
 
-{%- if podman.enable_debian_unstable and "Debian" == grains.os and "pkg" == podman.install_method %}
+{%- if "Debian" == grains.os and "pkg" == podman.install_method %}
+{%-   if podman.debian_experimental %}
+
+Debian experimental repository is inactive:
+  pkgrepo.absent:
+    - humanname: Debian experimental
+    - name: deb http://deb.debian.org/debian/ experimental main contrib non-free
+    - file: /etc/apt/sources.list
+
+Debian repositories are unpinned:
+  file.absent:
+    - name: /etc/apt/preferences.d/99pin-experimental
+{%-   elif podman.debian_unstable %}
 
 Debian unstable repository is inactive:
   pkgrepo.absent:

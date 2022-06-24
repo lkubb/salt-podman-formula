@@ -15,7 +15,31 @@ include:
 {%-   endif %}
 {%- endif %}
 
-{%- if podman.enable_debian_unstable and "Debian" == grains.os and "pkg" == podman.install_method %}
+{%- if "Debian" == grains.os and "pkg" == podman.install_method %}
+{%-   if podman.debian_experimental %}
+
+Debian experimental repository is active:
+  pkgrepo.managed:
+    - humanname: Debian experimental
+    - name: deb http://deb.debian.org/debian/ experimental main contrib non-free
+    - file: /etc/apt/sources.list
+    - require_in:
+      - podman-package-install-pkg-installed
+
+Debian experimental repository is pinned to low priority to not install all experimental packages:
+  file.managed:
+    - name: /etc/apt/preferences.d/99pin-experimental
+    - contents: |
+        Package: *
+        Pin: release a=stable
+        Pin-Priority: 900
+
+        Package: *
+        Pin: release a=experimental
+        Pin-Priority: 10
+    - require_in:
+      - podman-package-install-pkg-installed
+{%-   elif podman.debian_unstable %}
 
 Debian unstable repository is active:
   pkgrepo.managed:
@@ -35,9 +59,10 @@ Debian unstable repository is pinned to low priority to not install all unstable
 
         Package: *
         Pin: release a=unstable
-        Pin-Priority: 10
+        Pin-Priority: 20
     - require_in:
       - podman-package-install-pkg-installed
+{%-   endif %}
 {%- endif %}
 
 podman-package-install-pkg-installed:
