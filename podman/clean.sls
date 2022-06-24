@@ -5,7 +5,7 @@
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 include:
-{%- if podman.salt_compat %}
+{%- if podman.salt_compat or podman.service_enable %}
   - .service.clean
 {%- endif %}
   - .config.clean

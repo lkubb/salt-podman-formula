@@ -7,6 +7,6 @@
 include:
   - .package
   - .config
-{%- if podman.salt_compat %}
+{%- if podman.salt_compat or podman.service_enable %}
   - .service
 {%- endif %}

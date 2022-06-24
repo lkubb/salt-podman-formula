@@ -20,11 +20,8 @@ podman-package-clean-pkg-removed:
     - require:
       - sls: {{ sls_config_clean }}
 
-{%- if podman.salt_compat or podman.service_enable %}
-
 Podman unit files are absent:
   file.absent:
     - names:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
       - {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
-{%- endif %}

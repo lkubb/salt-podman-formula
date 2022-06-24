@@ -31,8 +31,6 @@ Restart salt minion on installation of toml:
     - onchanges:
       - pip: toml
 
-{%- if podman.salt_compat or podman.service_enable %}
-
 Podman unit files are installed:
   file.managed:
     - names:
@@ -64,4 +62,3 @@ Podman unit files are installed:
       - file: {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
       - file: {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
 {%-   endif %}
-{%- endif %}
