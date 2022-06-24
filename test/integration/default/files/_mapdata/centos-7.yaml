@@ -14,9 +14,8 @@ values:
     config_files:
       containers: containers.conf
       mounts: mounts.conf
-      mounts_usr: /usr/share/containers/mounts.conf
       policy: policy.json
-      registries: registries.conf.d/salt.conf
+      registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
     salt_compat:
@@ -31,25 +30,28 @@ values:
       name: podman
       path: /etc/systemd/system/{name}.service
       socket_path: /etc/systemd/system/{name}.socket
-  containers_conf:
-    containers: {}
-    engine: {}
-    machine: {}
-    network: {}
-    secret: {}
-    service_destinations: {}
+  config:
+    global:
+      containers:
+        containers: {}
+        engine: {}
+        machine: {}
+        network: {}
+        secret: {}
+        service_destinations: {}
+      mounts: []
+      policy:
+        default:
+          - type: insecureAcceptAnything
+      registries:
+        registry: []
+        unqualified-search-registries:
+          - docker.io
+      storage: {}
+    user: {}
   install_method: pkg
-  mounts: []
-  policy:
-    default:
-      - type: insecureAcceptAnything
-  registries:
-    registry: []
-    unqualified-search-registries:
-      - docker.io
   salt_compat: false
   service_enable: false
-  storage: {}
   map_jinja:
     sources:
     - Y:G@osarch

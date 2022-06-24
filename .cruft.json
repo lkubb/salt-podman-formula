@@ -29,9 +29,8 @@
         "config_files": {
           "containers": "containers.conf",
           "mounts": "mounts.conf",
-          "mounts_usr": "/usr/share/containers/mounts.conf",
           "policy": "policy.json",
-          "registries": "registries.conf.d/salt.conf",
+          "registries": "registries.conf",
           "seccomp": "/usr/share/containers/seccomp.json",
           "storage": "storage.conf"
         },
@@ -54,32 +53,37 @@
         }
       },
       "_settings": {
-        "containers_conf": {
-          "containers": {},
-          "network": {},
-          "engine": {},
-          "service_destinations": {},
-          "secret": {},
-          "machine": {}
+        "config": {
+          "global": {
+            "containers": {
+              "containers": {},
+              "network": {},
+              "engine": {},
+              "service_destinations": {},
+              "secret": {},
+              "machine": {}
+            },
+            "mounts": [],
+            "policy": {
+              "default": [
+                {
+                  "type": "insecureAcceptAnything"
+                }
+              ]
+            },
+            "registries": {
+              "unqualified-search-registries": [
+                "docker.io"
+              ],
+              "registry": []
+            },
+            "storage": {}
+          },
+          "user": {}
         },
         "install_method": "pkg",
-        "mounts": [],
-        "policy": {
-          "default": [
-            {
-              "type": "insecureAcceptAnything"
-            }
-          ]
-        },
-        "registries": {
-          "unqualified-search-registries": [
-            "docker.io"
-          ],
-          "registry": []
-        },
         "salt_compat": false,
-        "service_enable": false,
-        "storage": {}
+        "service_enable": false
       },
       "_template": "https://github.com/lkubb/salt-template-formula"
     }

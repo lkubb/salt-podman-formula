@@ -4,44 +4,55 @@
 ---
 podman:
   install_method: pkg  # [system]pkg or repo (kubic only currently, discouraged)
-    # Global containers.conf settings
-    # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
-  containers_conf:
-    containers: {}
-    engine: {}
-    machine: {}
-    network: {}
-    secret: {}
-    service_destinations: {}
-    # list of lines in mounts.conf
-  mounts: []
-    # Container acceptance policies, see
-    # https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md
-    # This allows containers from everywhere and you are highly encouraged
-    # to specify a tighter configuration.
-  policy:
-    default:
-      - type: insecureAcceptAnything
-    # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
-  registries:
-      # List of registries to configure.
-      # The example config from the URI above is represented below.
-    registry: []
-      # - prefix: example.com/foo
-      #   insecure: false
-      #   blocked: false
-      #   location: internal-registry-for-example.com/bar
-      #   mirror:
-      #     - location: example-mirror-0.local/mirror-for-foo
-      #     - location: example-mirror-1.local/mirrors/foo
-      #       insecure: true
-      # - location: registry.com
-      #   mirror:
-      #     - location: mirror.registry.com
+  config:
+      # Global configuration in /etc/containers
+    global:
+        # Global containers.conf settings
+        # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
+      containers:
+        containers: {}
+        engine: {}
+        machine: {}
+        network: {}
+        secret: {}
+        service_destinations: {}
+        # list of lines in mounts.conf
+      mounts: []
+        # Container acceptance policies in policy.json, see
+        # https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md
+        # This allows containers from everywhere and you are highly encouraged
+        # to specify a tighter configuration.
+      policy:
+        default:
+          - type: insecureAcceptAnything
+        # Global registries.conf settings
+        # https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md
+      registries:
+          # List of registries to configure.
+          # The example config from the URI above is represented below.
+        registry: []
+          # - prefix: example.com/foo
+          #   insecure: false
+          #   blocked: false
+          #   location: internal-registry-for-example.com/bar
+          #   mirror:
+          #     - location: example-mirror-0.local/mirror-for-foo
+          #     - location: example-mirror-1.local/mirrors/foo
+          #       insecure: true
+          # - location: registry.com
+          #   mirror:
+          #     - location: mirror.registry.com
 
-      # List of registries where to look when pulling unqualified images (in order).
-    unqualified-search-registries:
-      - docker.io
+          # List of registries where to look when pulling unqualified images (in order).
+        unqualified-search-registries:
+          - docker.io
+        # Global storage.conf settings
+        # https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md
+      storage: {}
+      # User-specific configuration in $XDG_CONFIG_HOME/containers.
+      # mapping of username to the different keys as seen in global
+      # If a user does not exist, skips configuration (will not create a user)
+    user: {}
     # If you want to use the Salt docker modules with podman, enable
     # this. Support is buggy. This will install `podman system service` as a
     # long-running system service.
@@ -50,17 +61,13 @@ podman:
     # Just enable the long-running system service without installing
     # Salt compatibility. Has no effect when salt_compat == true
   service_enable: false
-    # Global storage.conf settings
-    # https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md
-  storage: {}
 
   lookup:
     config_files:
       containers: containers.conf
       mounts: mounts.conf
-      mounts_usr: /usr/share/containers/mounts.conf
       policy: policy.json
-      registries: registries.conf.d/salt.conf
+      registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
     salt_compat:

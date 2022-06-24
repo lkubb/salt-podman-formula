@@ -8,12 +8,12 @@
 include:
   - {{ sls_package_install }}
 
-{%- if podman.mounts %}
+{%- if podman.config.global.mounts %}
 
-Podman mounts file is managed:
+Podman global mounts configuration is managed:
   file.managed:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.mounts) }}
-    - contents: {{ podman.mounts | json }}
+    - contents: {{ podman.config.global.mounts | json }}
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
@@ -22,9 +22,9 @@ Podman mounts file is managed:
       - sls: {{ sls_package_install }}
 {%- endif %}
 
-{%- if podman.storage %}
+{%- if podman.config.global.storage %}
 
-Podman storage file is managed:
+Podman global storage configuration is managed:
   file.serialize:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.storage) }}
     - serializer: toml
@@ -34,10 +34,10 @@ Podman storage file is managed:
     - makedirs: True
     - require:
       - sls: {{ sls_package_install }}
-    - dataset: {{ podman.storage | json }}
+    - dataset: {{ podman.config.global.storage | json }}
 {%- endif %}
 
-Podman policy file is managed:
+Podman global policy configuration is managed:
   file.serialize:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.policy) }}
     - serializer: json
@@ -47,9 +47,9 @@ Podman policy file is managed:
     - makedirs: True
     - require:
       - sls: {{ sls_package_install }}
-    - dataset: {{ podman.policy | json }}
+    - dataset: {{ podman.config.global.policy | json }}
 
-Podman registry configuration is managed:
+Podman global registry configuration is managed:
   file.serialize:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.registries) }}
     - serializer: toml
@@ -59,9 +59,9 @@ Podman registry configuration is managed:
     - makedirs: True
     - require:
       - sls: {{ sls_package_install }}
-    - dataset: {{ podman.registries | json }}
+    - dataset: {{ podman.config.global.registries | json }}
 
-Podman container configuration is managed:
+Podman global container configuration is managed:
   file.serialize:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.containers) }}
     - serializer: toml
@@ -71,4 +71,56 @@ Podman container configuration is managed:
     - makedirs: True
     - require:
       - sls: {{ sls_package_install }}
-    - dataset: {{ podman.containers_conf | json }}
+    - dataset: {{ podman.config.global.containers | json }}
+
+{%- for username, config in podman.config.user.items() %}
+{%-   if salt["user.info"](username) %}
+{%-     set primary_group = salt["user.primary_group"](username) %}
+{%-     set xdg_config = salt["cmd.run_stdout"]("echo ${XDG_CONFIG_HOME:-$HOME/.config}/containers", runas=username) %}
+{%-     if "mounts" in config %}
+
+Podman mounts configuration is managed for user {{ username }}:
+  file.managed:
+    - name: {{ xdg_config | path_join(podman.lookup.config_files.mounts) }}
+    - contents: {{ config.mounts | json }}
+    - mode: '0644'
+    - user: {{ username }}
+    - group: {{ primary_group }}
+    - makedirs: True
+    - require:
+      - sls: {{ sls_package_install }}
+{%-     endif %}
+
+{%-     if "policy" in config %}
+
+Podman policy configuration is managed for user {{ username }}:
+  file.serialize:
+    - name: {{ xdg_config | path_join(podman.lookup.config_files.policy) }}
+    - serializer: json
+    - mode: '0644'
+    - user: {{ username }}
+    - group: {{ primary_group }}
+    - makedirs: True
+    - require:
+      - sls: {{ sls_package_install }}
+    - dataset: {{ config.policy | json }}
+{%-     endif %}
+
+{%-     for scope in ["storage", "registries", "containers"] %}
+{%-       if scope in config %}
+
+Podman {{ scope }} configuration is managed for user {{ username }}:
+  file.serialize:
+    - name: {{ xdg_config | path_join(podman.lookup.config_files[scope]) }}
+    - serializer: toml
+    - mode: '0644'
+    - user: {{ username }}
+    - group: {{ primary_group }}
+    - makedirs: True
+    - require:
+      - sls: {{ sls_package_install }}
+    - dataset: {{ config[scope] | json }}
+{%-       endif %}
+{%-     endfor %}
+{%-   endif %}
+{%- endfor %}
