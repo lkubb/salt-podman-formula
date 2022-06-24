@@ -26,6 +26,19 @@ Podman unit files are absent:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
       - {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
 
+{%- if podman.enable_debian_unstable and "Debian" == grains.os and "pkg" == podman.install_method %}
+
+Debian unstable repository is inactive:
+  pkgrepo.absent:
+    - humanname: Debian unstable
+    - name: deb http://deb.debian.org/debian/ unstable main contrib non-free
+    - file: /etc/apt/sources.list
+
+Debian repositories are unpinned:
+  file.absent:
+    - name: /etc/apt/preferences.d/99pin-unstable
+{%- endif %}
+
 {%- if podman.compose %}
 {%-   if "docker" == podman.compose %}
 

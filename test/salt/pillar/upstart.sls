@@ -70,6 +70,7 @@ podman:
           - docker.io
       storage: {}
     user: {}
+  enable_debian_unstable: false
   install_method: pkg
   salt_compat: false
   service_enable: false

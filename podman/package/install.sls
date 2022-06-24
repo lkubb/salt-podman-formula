@@ -15,6 +15,31 @@ include:
 {%-   endif %}
 {%- endif %}
 
+{%- if podman.enable_debian_unstable and "Debian" == grains.os and "pkg" == podman.install_method %}
+
+Debian unstable repository is active:
+  pkgrepo.managed:
+    - humanname: Debian unstable
+    - name: deb http://deb.debian.org/debian/ unstable main contrib non-free
+    - file: /etc/apt/sources.list
+    - require_in:
+      - podman-package-install-pkg-installed
+
+Debian unstable repository is pinned to low priority to not install all unstable packages:
+  file.managed:
+    - name: /etc/apt/preferences.d/99pin-unstable
+    - contents: |
+        Package: *
+        Pin: release a=stable
+        Pin-Priority: 900
+
+        Package: *
+        Pin: release a=unstable
+        Pin-Priority: 10
+    - require_in:
+      - podman-package-install-pkg-installed
+{%- endif %}
+
 podman-package-install-pkg-installed:
   pkg.installed:
     - name: {{ podman.lookup.pkg.name }}
