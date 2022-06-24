@@ -44,4 +44,4 @@ Podman registry configuration is managed:
     - makedirs: True
     - require:
       - sls: {{ sls_package_install }}
-    - dataset: {{ podman.policy | json }}
+    - dataset: {{ podman.registries | json }}
