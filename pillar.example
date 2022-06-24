@@ -38,6 +38,12 @@ podman:
     # long-running system service.
     # See https://github.com/saltstack/salt/issues/50624#issuecomment-668495953
   salt_compat: false
+    # Just enable the long-running system service without installing
+    # Salt compatibility. Has no effect when salt_compat == true
+  service_enable: false
+    # Global storage.conf settings
+    # https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md
+  storage: {}
 
   lookup:
     config_files:
@@ -46,6 +52,7 @@ podman:
       policy: policy.json
       registries: registries.conf.d/salt.conf
       seccomp: /usr/share/containers/seccomp.json
+      storage: storage.conf
     salt_compat:
       pips:
         - docker

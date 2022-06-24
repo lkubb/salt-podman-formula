@@ -16,5 +16,8 @@ podman-config-clean-file-absent:
 {%- if podman.mounts %}
       - {{ podman.lookup.config | path_join(podman.lookup.config_files.mounts) }}
 {%- endif %}
+{%- if podman.storage %}
+      {{ podman.lookup.config | path_join(podman.lookup.config_files.storage) }}
+{%- endif %}
     - require:
       - sls: {{ sls_service_clean }}

@@ -18,6 +18,7 @@ podman:
       policy: policy.json
       registries: registries.conf.d/salt.conf
       seccomp: /usr/share/containers/seccomp.json
+      storage: storage.conf
     salt_compat:
       pips:
         - docker
@@ -41,6 +42,7 @@ podman:
       - docker.io
   salt_compat: false
   service_enable: false
+  storage: {}
 
   tofs:
     # The files_switch key serves as a selector for alternative

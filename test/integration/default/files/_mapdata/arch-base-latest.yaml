@@ -17,6 +17,7 @@ values:
       policy: policy.json
       registries: registries.conf.d/salt.conf
       seccomp: /usr/share/containers/seccomp.json
+      storage: storage.conf
     salt_compat:
       pips:
         - docker
@@ -40,6 +41,7 @@ values:
       - docker.io
   salt_compat: false
   service_enable: false
+  storage: {}
   map_jinja:
     sources:
     - Y:G@osarch

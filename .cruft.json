@@ -31,7 +31,8 @@
           "mounts_usr": "/usr/share/containers/mounts.conf",
           "policy": "policy.json",
           "registries": "registries.conf.d/salt.conf",
-          "seccomp": "/usr/share/containers/seccomp.json"
+          "seccomp": "/usr/share/containers/seccomp.json",
+          "storage": "storage.conf"
         },
         "salt_compat": {
           "pips": [
@@ -68,7 +69,8 @@
           "registry": []
         },
         "salt_compat": false,
-        "service_enable": false
+        "service_enable": false,
+        "storage": {}
       },
       "_template": "https://github.com/lkubb/salt-template-formula"
     }

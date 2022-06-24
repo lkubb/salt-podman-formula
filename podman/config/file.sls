@@ -22,6 +22,21 @@ Podman mounts file is managed:
       - sls: {{ sls_package_install }}
 {%- endif %}
 
+{%- if podman.storage %}
+
+Podman storage file is managed:
+  file.serialize:
+    - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.storage) }}
+    - serializer: toml
+    - mode: '0644'
+    - user: root
+    - group: {{ podman.lookup.rootgroup }}
+    - makedirs: True
+    - require:
+      - sls: {{ sls_package_install }}
+    - dataset: {{ podman.storage | json }}
+{%- endif %}
+
 Podman policy file is managed:
   file.serialize:
     - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.policy) }}
