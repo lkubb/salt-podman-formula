@@ -4,6 +4,15 @@
 ---
 podman:
   install_method: pkg  # [system]pkg or repo (kubic only currently, discouraged)
+    # Global containers.conf settings
+    # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
+  containers_conf:
+    containers: {}
+    engine: {}
+    machine: {}
+    network: {}
+    secret: {}
+    service_destinations: {}
     # list of lines in mounts.conf
   mounts: []
     # Container acceptance policies, see
@@ -47,6 +56,7 @@ podman:
 
   lookup:
     config_files:
+      containers: containers.conf
       mounts: mounts.conf
       mounts_usr: /usr/share/containers/mounts.conf
       policy: policy.json

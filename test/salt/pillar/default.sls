@@ -10,9 +10,8 @@ podman:
     enablerepo:
       stable: true
     config: '/etc/containers'
-    service:
-      name: podman
     config_files:
+      containers: containers.conf
       mounts: mounts.conf
       mounts_usr: /usr/share/containers/mounts.conf
       policy: policy.json
@@ -31,6 +30,13 @@ podman:
       name: podman
       path: /etc/systemd/system/{name}.service
       socket_path: /etc/systemd/system/{name}.socket
+  containers_conf:
+    containers: {}
+    engine: {}
+    machine: {}
+    network: {}
+    secret: {}
+    service_destinations: {}
   install_method: pkg
   mounts: []
   policy:

@@ -27,6 +27,7 @@
       "git_username": "lkubb",
       "_lookup": {
         "config_files": {
+          "containers": "containers.conf",
           "mounts": "mounts.conf",
           "mounts_usr": "/usr/share/containers/mounts.conf",
           "policy": "policy.json",
@@ -53,6 +54,14 @@
         }
       },
       "_settings": {
+        "containers_conf": {
+          "containers": {},
+          "network": {},
+          "engine": {},
+          "service_destinations": {},
+          "secret": {},
+          "machine": {}
+        },
         "install_method": "pkg",
         "mounts": [],
         "policy": {

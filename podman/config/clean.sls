@@ -11,6 +11,7 @@ include:
 podman-config-clean-file-absent:
   file.absent:
     - names:
+      - {{ podman.lookup.config | path_join(podman.lookup.config_files.containers) }}
       - {{ podman.lookup.config | path_join(podman.lookup.config_files.policy) }}
       - {{ podman.lookup.config | path_join(podman.lookup.config_files.registries) }}
 {%- if podman.mounts %}

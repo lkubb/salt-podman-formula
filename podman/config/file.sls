@@ -60,3 +60,15 @@ Podman registry configuration is managed:
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ podman.registries | json }}
+
+Podman container configuration is managed:
+  file.serialize:
+    - name: {{ podman.lookup.config | path_join(podman.lookup.config_files.containers) }}
+    - serializer: toml
+    - mode: '0644'
+    - user: root
+    - group: {{ podman.lookup.rootgroup }}
+    - makedirs: True
+    - require:
+      - sls: {{ sls_package_install }}
+    - dataset: {{ podman.containers_conf | json }}
