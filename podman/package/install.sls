@@ -132,5 +132,7 @@ docker-compose is installed:
 podman-compose is installed:
   pip.installed:
     - name: {{ podman._compose }}
+    - require:
+      - podman-package-install-pkg-installed
 {%-   endif %}
 {%- endif %}
