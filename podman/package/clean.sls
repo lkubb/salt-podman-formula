@@ -51,16 +51,16 @@ Debian repositories are unpinned:
     - name: /etc/apt/preferences.d/99pin-unstable
 {%- endif %}
 
-{%- if podman.compose %}
-{%-   if "docker" == podman.compose %}
+{%- if podman.compose.install %}
+{%-   if "docker" == podman.compose.install %}
 
 docker-compose is absent:
   file.absent:
     - name: /usr/local/bin/docker-compose
-{%-   elif "podman" == podman.compose %}
+{%-   elif "podman" == podman.compose.install %}
 
 podman-compose is absent:
   pip.removed:
-    - name: {{ podman._compose }}
+    - name: {{ podman.lookup.compose.podman.pip }}
 {%-   endif %}
 {%- endif %}

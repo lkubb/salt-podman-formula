@@ -51,7 +51,8 @@
               "3.0"
             ],
             "pip": "podman-compose",
-            "pip_legacy": "podman-compose==0.1.11"
+            "pip_legacy": "podman-compose==0.1.11",
+            "repo": "https://github.com/containers/podman-compose"
           }
         },
         "config_files": {
@@ -81,7 +82,10 @@
         }
       },
       "_settings": {
-        "compose": false,
+        "compose": {
+          "install": false,
+          "podman_compose_rev": false
+        },
         "config": {
           "global": {
             "containers": {

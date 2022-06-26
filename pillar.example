@@ -5,10 +5,18 @@
 podman:
   version: latest
   install_method: pkg  # [system]pkg or repo (kubic only currently, discouraged)
-    # Whether to install docker-compose, podman-compose or nothing.
-    # For docker-compose, you will need to set `service_enable: true`
-    # docker, podman, false
-  compose: false
+  compose:
+      # Whether to install docker-compose, podman-compose or nothing.
+      # For docker-compose, you will need to set `service_enable: true`
+      # docker, podman, false
+    install: false
+      # Set to true to install from the github repo's latest commit
+      # on the default branch or specify exact git rev to install.
+      # The latest released version is 1.0.3, but 1.0.4 will re-enable
+      # pod creation per docker-compose file.
+      # https://github.com/containers/podman-compose/issues/442#issuecomment-1062067920
+      # Install from `devel` branch to enable that behavior.
+    podman_compose_rev: false
     # Global and user-specific configuration
   config:
       # Global configuration in /etc/containers
@@ -97,6 +105,7 @@ podman:
           - '3.0'
         pip: podman-compose
         pip_legacy: podman-compose==0.1.11
+        repo: https://github.com/containers/podman-compose
     config_files:
       containers: containers.conf
       mounts: mounts.conf

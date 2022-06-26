@@ -31,6 +31,7 @@ podman:
           - '3.0'
         pip: podman-compose
         pip_legacy: podman-compose==0.1.11
+        repo: https://github.com/containers/podman-compose
     config_files:
       containers: containers.conf
       mounts: mounts.conf
@@ -50,7 +51,9 @@ podman:
       name: podman
       path: /etc/systemd/system/{name}.service
       socket_path: /etc/systemd/system/{name}.socket
-  compose: false
+  compose:
+    install: false
+    podman_compose_rev: false
   config:
     global:
       containers:
