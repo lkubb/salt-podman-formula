@@ -16,6 +16,10 @@ Podman Formula
 
 Manage Podman with Salt.
 
+This formula can also install ``docker-compose``/``podman-compose`` and make Podman work with the ``docker`` Salt execution/state module, as far as podman is compatible with the API.
+
+Currently, it is only tested (manually) on Debian 11. Previous Debian releases would take much more effort and are outdated anyways. Other distributions are definitely in scope and will be added at some point.
+
 .. contents:: **Table of Contents**
    :depth: 1
 
@@ -41,7 +45,8 @@ If you need (non-default) configuration, please refer to:
 
 Special notes
 -------------
-
+* The Debian 11 stable repository packages an outdated version of ``podman``, hence the possibility to enable ``sid`` or ``experimental`` (discouraged, might break your system).
+* Rootless support currently depends on the package, I have observed some difficulty with the more current package in ``sid``.
 
 Configuration
 -------------
@@ -179,3 +184,27 @@ Runs all of the stages above in one go: i.e. ``destroy`` + ``converge`` + ``veri
 ^^^^^^^^^^^^^^^^^^^^^
 
 Gives you SSH access to the instance for manual testing.
+
+Todo
+----
+* better rootless support
+
+.. code-block:: yaml
+
+   #(apt)
+   rootless:
+     - dbus-user-session
+     - slirp4netns
+     - uidmap
+     - fuse-overlayfs # kernels < 5.11
+
+
+   #(dnf)
+   rootless:
+     - dbus-daemon # dbus-user-session
+     - slirp4netns
+     - shadow-utils # uidmap
+
+References
+----------
+* https://rootlesscontaine.rs

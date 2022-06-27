@@ -80,7 +80,9 @@ podman:
     # See https://github.com/saltstack/salt/issues/50624#issuecomment-668495953
   salt_compat: false
     # Just enable the long-running system service without installing
-    # Salt compatibility. Has no effect when salt_compat == true
+    # Salt compatibility. Has no effect when salt_compat == true.
+    # The service is socket-activated, hence it is only started once
+    # it is called.
   service_enable: false
 
   lookup:

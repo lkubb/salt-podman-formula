@@ -82,6 +82,7 @@ Restart salt minion on installation of toml:
     - onchanges:
       - pip: toml
 
+# those are installed by the Debian package automatically
 Podman unit files are installed:
   file.managed:
     - names:
