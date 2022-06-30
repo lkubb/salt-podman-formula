@@ -10,6 +10,9 @@ podman:
       # For docker-compose, you will need to set `service_enable: true`
       # docker, podman, false
     install: false
+      # Install the custom Salt execution and state modules found
+      # in this formula
+    install_modules: false
       # Set to true to install from the github repo's latest commit
       # on the default branch or specify exact git rev to install.
       # The latest released version is 1.0.3, but 1.0.4 will re-enable

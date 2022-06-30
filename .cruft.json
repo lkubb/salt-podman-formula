@@ -84,6 +84,7 @@
       "_settings": {
         "compose": {
           "install": false,
+          "install_modules": false,
           "podman_compose_rev": false
         },
         "config": {

@@ -137,3 +137,21 @@ podman-compose is installed:
       - podman-package-install-pkg-installed
 {%-   endif %}
 {%- endif %}
+
+{%- if podman.compose.install_modules %}
+
+Custom compose Salt modules are installed:
+  saltutil.sync_all:
+    - refresh: true
+    - extmod_whitelist:
+        modules:
+          - compose
+        states:
+          - compose
+        beacons: []
+        grains: []
+        returners: []
+        output: []
+        renderers: []
+        utils: []
+{%- endif %}

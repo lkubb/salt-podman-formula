@@ -53,6 +53,7 @@ podman:
       socket_path: /etc/systemd/system/{name}.socket
   compose:
     install: false
+    install_modules: false
     podman_compose_rev: false
   config:
     global:
