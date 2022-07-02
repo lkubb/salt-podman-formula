@@ -65,10 +65,19 @@ Debian unstable repository is pinned to low priority to not install all unstable
 {%-   endif %}
 {%- endif %}
 
+{%- if not podman.debian_unstable %}
+
 podman-package-install-pkg-installed:
   pkg.installed:
     - name: {{ podman.lookup.pkg.name }}
     - version: {{ podman.version }}
+
+{%- else %}
+
+podman-package-install-pkg-installed:
+  pkg.installed:
+    - pkgs: {{ podman.lookup.pkg.unstable }}
+{%- endif %}
 
 Toml python library is installed:
   pip.installed:

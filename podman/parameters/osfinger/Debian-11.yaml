@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+# vim: ft=yaml
+#
+# Set default values.
+---
+values:
+  lookup:
+    rootgroup: root
+    pkg:
+      name: podman
+      unstable:
+        - podman: 3.4*
+        - libc6: 2.33*
+        - libc-bin: 2.33*
+        - locales: 2.33*
+        - libc-l10n: 2.33*
+        - catatonit: 0.1.7*
+        - containernetworking-plugins: 1.1*
+        - golang-github-containernetworking-plugin-dnsname: 1.3*
+        - golang-github-containers-common: 0.44*
+        - golang-github-containers-image: 5.16*
+        - dbus-user-session
+        - slirp4netns
+        - uidmap
+...

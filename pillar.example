@@ -72,7 +72,10 @@ podman:
     user: {}
     # On Debian, it is possible to install higher versions than 3.0
     # (current stable repo) by enabling unstable/experimental.
-    # Version 3.4/4 can be installed that way.
+    # Version 3.4/4 can be installed that way, although it is
+    # discouraged to mix stable and unstable/experimental.
+    # `version` will be disregarded.
+    # Note that experimental will fail currently if you are on another branch.
     # Having compose enabled, this formula might still default to legacy
     # installation during the first run if version is set to latest.
   debian_experimental: false
