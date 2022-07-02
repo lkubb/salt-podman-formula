@@ -39,6 +39,7 @@ podman:
       registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
+    pip_pkg: python3-pip
     salt_compat:
       pips:
         - docker
