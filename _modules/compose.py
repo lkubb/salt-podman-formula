@@ -1098,16 +1098,11 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
         options_finished = False
 
         while cur < num:
-            if not args[cur].startswith("-"):
+            if not args[cur].startswith("-") or options_finished:
                 options_finished = True
                 parsed["params"].append(args[cur])
                 cur += 1
                 continue
-
-            if options_finished:
-                raise RuntimeError(
-                    "Failed parsing the following arguments: {}".format(" ".join(args))
-                )
 
             arg = args[cur].lstrip("-")
             val = True
