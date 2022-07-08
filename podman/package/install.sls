@@ -79,16 +79,17 @@ podman-package-install-pkg-installed:
     - pkgs: {{ podman.lookup.pkg.unstable }}
 {%- endif %}
 
-Pip is available for podman formula:
+# this installs pip and git, which are required for this formula
+Podman required packages are installed:
   pkg.installed:
-    - name: {{ podman.lookup.pip_pkg }}
+    - pkgs: {{ podman.lookup.required_pkgs }}
 
 Toml python library is installed:
   pip.installed:
     - name: toml
     - reload_modules: true
     - require:
-      - pkg: {{ podman.lookup.pip_pkg }}
+      - Podman required packages are installed
 
 Restart salt minion on installation of toml:
   cmd.run:
@@ -150,7 +151,7 @@ podman-compose is installed:
     - name: {{ podman._compose }}
     - require:
       - podman-package-install-pkg-installed
-      - pkg: {{ podman.lookup.pip_pkg }}
+      - Podman required packages are installed
 {%-   endif %}
 {%- endif %}
 
