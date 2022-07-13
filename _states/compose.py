@@ -39,8 +39,8 @@ Todo:
 
 import time
 
-from salt.utils.args import get_function_argspec as _argspec
 from salt.exceptions import CommandExecutionError, SaltInvocationError
+from salt.utils.args import get_function_argspec as _argspec
 
 
 def _get_valid_args(func, kwargs):
@@ -226,7 +226,9 @@ def installed(
             user=user,
         ):
             ret["result"] = False
-            ret["comment"] = "Tried to install the composition, but there are still some missing components."
+            ret[
+                "comment"
+            ] = "Tried to install the composition, but there are still some missing components."
 
     except (CommandExecutionError, SaltInvocationError) as e:
         ret["result"] = False
@@ -295,7 +297,7 @@ def removed(
 
         # @TODO this does not check for containers belonging to this composition
         # if the services are not ephemeral
-        if not  __salt__["compose.list_installed_units"](
+        if not __salt__["compose.list_installed_units"](
             name,
             status_only=True,
             project_name=project_name,
@@ -345,7 +347,9 @@ def removed(
             user=user,
         ):
             ret["result"] = False
-            ret["comment"] = "Tried to remove the composition, but some units are still installed."
+            ret[
+                "comment"
+            ] = "Tried to remove the composition, but some units are still installed."
             ret["changes"] = {}
 
     except (CommandExecutionError, SaltInvocationError) as e:
@@ -362,7 +366,7 @@ def dead(
     container_prefix=None,
     separator=None,
     user=None,
-    check_delay=1
+    timeout=10,
 ):
     """
     Make sure the installed units for a composition are dead.
@@ -395,11 +399,11 @@ def dead(
         the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
         or Salt process user. By default, defaults to the parent dir owner.
 
-    check_delay
+    timeout
         This state checks whether all services belonging to a composition are up.
-        Since only the pod service is started explicitly, there is a short delay
-        until the containers are reported as up. This configures the time in seconds
-        to wait before checking the state of all services. Defaults to 1.
+        Since only the pod is started explicitly, there is a slight delay for the container
+        services. Furthermore, many containers require some time to be reported
+        as up. This configures the maximum wait time in seconds. Defaults to 10.
     """
 
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
@@ -459,10 +463,9 @@ def dead(
                 f"Something went wrong while trying to stop service for {name}. This should not happen."
             )
 
-        if check_delay:
-            time.sleep(check_delay)
+        start_time = time.time()
 
-        if not __salt__["compose.is_dead"](
+        while not __salt__["compose.is_dead"](
             name,
             project_name=project_name,
             pod_prefix=pod_prefix,
@@ -470,9 +473,11 @@ def dead(
             separator=separator,
             user=user,
         ):
-            ret["result"] = False
-            ret["comment"] = "Tried to stop the service, but it is still running."
-            ret["changes"] = {}
+            if time.time() - start_time > timeout:
+                ret["result"] = False
+                ret["comment"] = "Tried to stop the service, but it is still running."
+                ret["changes"] = {}
+            time.sleep(0.25)
 
     except (CommandExecutionError, SaltInvocationError) as e:
         ret["result"] = False
@@ -587,7 +592,9 @@ def disabled(
             user=user,
         ):
             ret["result"] = False
-            ret["comment"] = "Tried to disable the service, but it is still reported as enabled."
+            ret[
+                "comment"
+            ] = "Tried to disable the service, but it is still reported as enabled."
             ret["changes"] = {}
 
     except (CommandExecutionError, SaltInvocationError) as e:
@@ -681,7 +688,9 @@ def enabled(
             user=user,
         ):
             ret["result"] = False
-            ret["comment"] = "Tried to enable the service, but it is reported as disabled."
+            ret[
+                "comment"
+            ] = "Tried to enable the service, but it is reported as disabled."
             ret["changes"] = {}
 
     except (CommandExecutionError, SaltInvocationError) as e:
@@ -698,7 +707,7 @@ def running(
     container_prefix=None,
     separator=None,
     user=None,
-    check_delay=1
+    timeout=10,
 ):
     """
     Make sure the installed units for a composition are running.
@@ -735,11 +744,11 @@ def running(
         the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
         or Salt process user. By default, defaults to the parent dir owner.
 
-    check_delay
+    timeout
         This state checks whether all services belonging to a composition are up.
-        Since only the pod service is started explicitly, there is a short delay
-        until the containers are reported as up. This configures the time in seconds
-        to wait before checking the state of all services. Defaults to 1.
+        Since only the pod is started explicitly, there is a slight delay for the container
+        services. Furthermore, many containers require some time to be reported
+        as up. This configures the maximum wait time in seconds. Defaults to 10.
     """
 
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
@@ -777,10 +786,9 @@ def running(
                 f"Something went wrong while trying to start service for {name}. This should not happen."
             )
 
-        if check_delay:
-            time.sleep(check_delay)
+        start_time = time.time()
 
-        if not __salt__["compose.is_running"](
+        while not __salt__["compose.is_running"](
             name,
             project_name=project_name,
             pod_prefix=pod_prefix,
@@ -788,9 +796,13 @@ def running(
             separator=separator,
             user=user,
         ):
-            ret["result"] = False
-            ret["comment"] = "Tried to start the service, but it is still not running."
-            ret["changes"] = {}
+            if time.time() - start_time > timeout:
+                ret["result"] = False
+                ret[
+                    "comment"
+                ] = "Tried to start the service, but it is still not running."
+                ret["changes"] = {}
+            time.sleep(0.25)
 
     except (CommandExecutionError, SaltInvocationError) as e:
         ret["result"] = False
@@ -818,7 +830,9 @@ def lingering_managed(name, enable):
         if not __salt__["user.info"](name):
             if __opts__["test"]:
                 ret["result"] = None
-                ret["comment"] = f"User {name} does not exist. If it is created by some state before this, this check will pass."
+                ret[
+                    "comment"
+                ] = f"User {name} does not exist. If it is created by some state before this, this check will pass."
                 return ret
             raise SaltInvocationError(f"User {name} does not exist.")
 
@@ -919,11 +933,17 @@ def mod_watch(name, sfun=None, *args, **kwargs):
         func_kwargs = _get_valid_args(func, kwargs)
         result = func(name, **func_kwargs)
 
-        if check_func and not check_func(name, **status_kwargs):
-            ret["result"] = False
-            ret["comment"] = f"Tried to {verb} the service, but it is still not {sfun}."
-            ret["changes"] = {}
-            return ret
+        if check_func:
+            timeout = kwargs.get("timeout", 10)
+            start_time = time.time()
+
+            while not check_func(name, **status_kwargs):
+                if time.time() - start_time > timeout:
+                    ret["result"] = False
+                    ret["comment"] = f"Tried to {verb} the service, but it is still not {sfun}."
+                    ret["changes"] = {}
+                    return ret
+                time.sleep(0.25)
 
     except (CommandExecutionError, SaltInvocationError) as e:
         ret["result"] = False
