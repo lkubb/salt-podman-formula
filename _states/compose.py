@@ -229,6 +229,7 @@ def installed(
             project_name=project_name,
             container_prefix=container_prefix,
             pod_prefix=pod_prefix,
+            should_have_pod=create_pod,
             separator=separator,
             user=user,
         ):

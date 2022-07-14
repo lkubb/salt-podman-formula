@@ -911,6 +911,7 @@ def list_missing_units(
     project_name=None,
     container_prefix=None,
     pod_prefix=None,
+    should_have_pod=None,
     separator=None,
     user=None,
 ):
@@ -946,6 +947,9 @@ def list_missing_units(
         (podman-compose prefixes pod names with pod_ already).
         A different default can be set in ``compose.default_pod_prefix``.
 
+    should_have_pod
+        Whether the composition should have a pod service. Defaults to True.
+
     separator
         Unit name separator between prefix and name/id.
         Depending on the other prefixes, defaults to empty or dash.
@@ -979,7 +983,7 @@ def list_missing_units(
             containers[service] = path
 
     is_installed, path = _is_unit_installed(pod_name, user)
-    if not is_installed:
+    if not is_installed and should_have_pod:
         pods[pod_name] = path
 
     if status_only:
