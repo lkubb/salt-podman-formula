@@ -314,9 +314,7 @@ def _systemctl(
 
         args = ["user"] + args
         env.append({"XDG_RUNTIME_DIR": xdg_runtime_dir})
-        env.append(
-            {"DBUS_SESSION_BUS_ADDRESS": f"unix:path={dbus_session_bus}"}
-        )
+        env.append({"DBUS_SESSION_BUS_ADDRESS": f"unix:path={dbus_session_bus}"})
 
     return _run(
         "systemctl",
@@ -339,7 +337,9 @@ def _loginctl(command, cmd_args=None, params=None, expect_error=False):
     related to lingering).
     """
 
-    return _run("loginctl", command, cmd_args=cmd_args, params=params, expect_error=expect_error)
+    return _run(
+        "loginctl", command, cmd_args=cmd_args, params=params, expect_error=expect_error
+    )
 
 
 def _user_info(user, var=""):
@@ -576,8 +576,10 @@ def _get_compose_hash(file):
 
     # need to normalize the data
     try:
-        import podman_compose
         import os
+
+        import podman_compose
+
         definitions = podman_compose.normalize(definitions)
         definitions = podman_compose.rec_subs(definitions, dict(os.environ))
     except ImportError:
@@ -741,12 +743,16 @@ def has_changes(
                 or cnt["Labels"].get("com.docker.compose.service")
                 in definitions["services"]
             ):
-                ret["changed"].append(cnt["Labels"].get("PODMAN_SYSTEMD_UNIT", cnt["Id"]))
+                ret["changed"].append(
+                    cnt["Labels"].get("PODMAN_SYSTEMD_UNIT", cnt["Id"])
+                )
 
     # This currently does not check for changes in pod service files @TODO
 
     if status_only:
-        return bool(ret["changed"] or ret["missing"]["pods"] or ret["missing"]["containers"])
+        return bool(
+            ret["changed"] or ret["missing"]["pods"] or ret["missing"]["containers"]
+        )
     return ret
 
 
@@ -1325,7 +1331,7 @@ def install(
     args = [("file", composition), ("project-name", project_name)]
     cmd_args = ["no-start"]
 
-    # pod settings are only available in versions
+    # pod settings are only available in versions >=1.0.4
     if not pc_pod_support["required"]:
         if create_pod:
             pod_args = _parse_args(_convert_args(pod_args), include_equal=True)
@@ -1333,6 +1339,7 @@ def install(
         else:
             # in versions where the choice is possible, the default is to create a pod
             args.append("no-pod")
+
     if remove_orphans:
         cmd_args.append("remove-orphans")
     if force_recreate:
@@ -2068,6 +2075,8 @@ def restart(
             f"Could not find any units belonging to project {project_name} for user {user}."
         )
 
+    # @FIXME afaict this does not work as intended for pods.
+    # probably needs to stop all services and then start the pod again
     for service in restart_services:
         _check_for_unit_changes(service, user)
         _systemctl("restart", params=[service], runas=user)

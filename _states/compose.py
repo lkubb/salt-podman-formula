@@ -940,7 +940,9 @@ def mod_watch(name, sfun=None, *args, **kwargs):
             while not check_func(name, **status_kwargs):
                 if time.time() - start_time > timeout:
                     ret["result"] = False
-                    ret["comment"] = f"Tried to {verb} the service, but it is still not {sfun}."
+                    ret[
+                        "comment"
+                    ] = f"Tried to {verb} the service, but it is still not {sfun}."
                     ret["changes"] = {}
                     return ret
                 time.sleep(0.25)
