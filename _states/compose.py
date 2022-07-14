@@ -484,6 +484,7 @@ def dead(
                 ret["result"] = False
                 ret["comment"] = "Tried to stop the service, but it is still running."
                 ret["changes"] = {}
+                return ret
             time.sleep(0.25)
 
     except (CommandExecutionError, SaltInvocationError) as e:
@@ -809,6 +810,7 @@ def running(
                     "comment"
                 ] = "Tried to start the service, but it is still not running."
                 ret["changes"] = {}
+                return ret
             time.sleep(0.25)
 
     except (CommandExecutionError, SaltInvocationError) as e:
