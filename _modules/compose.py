@@ -1213,6 +1213,7 @@ def install(
     project_name=None,
     create_pod=None,
     pod_args=None,
+    podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
     user=None,
@@ -1256,6 +1257,11 @@ def install(
         To support ``systemd`` managed pods, an infra container is necessary. Otherwise,
         none of the namespaces are shared by default. In summary,
         ["infra", {"share": ""}] is default.
+
+    podman_create_args
+        List of custom arguments to ``podman create``. This can be used to pass
+        options that are not exposed by podman-compose by default, e.g. userns.
+        See `man 'podman-create(1)' <https://docs.podman.io/en/latest/markdown/podman-create.1.html#options>`_
 
     remove_orphans
         Remove containers not defined in the composition. Defaults to True.
@@ -1327,6 +1333,7 @@ def install(
         )
 
     pod_args = pod_args or ["infra", {"share": ""}]
+    podman_create_args = podman_create_args or []
 
     args = [("file", composition), ("project-name", project_name)]
     cmd_args = ["no-start"]
@@ -1339,7 +1346,15 @@ def install(
         else:
             # in versions where the choice is possible, the default is to create a pod
             args.append("no-pod")
-
+    if podman_create_args:
+        parsed_podman_create_args = _parse_args(
+            _convert_args(podman_create_args), include_equal=True
+        )
+        # podman-create-args do not exist in podman-compose, but it uses podman-run-args
+        # https://github.com/containers/podman-compose/blob/ae6be272b5b74799135e518bc106a0322dcf4771/podman_compose.py#L1341-L1342
+        args.append(
+            ("podman-run-args", "'{}'".format(" ".join(parsed_podman_create_args)))
+        )
     if remove_orphans:
         cmd_args.append("remove-orphans")
     if force_recreate:

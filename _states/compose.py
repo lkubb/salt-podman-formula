@@ -56,6 +56,7 @@ def installed(
     project_name=None,
     create_pod=None,
     pod_args=None,
+    podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
     user=None,
@@ -98,6 +99,11 @@ def installed(
         To support ``systemd`` managed pods, an infra container is necessary. Otherwise,
         none of the namespaces are shared by default. In summary,
         ["infra", {"share": ""}] is default.
+
+    podman_create_args
+        List of custom arguments to ``podman create``. This can be used to pass
+        options that are not exposed by podman-compose by default, e.g. userns.
+        See `man 'podman-create(1)' <https://docs.podman.io/en/latest/markdown/podman-create.1.html#options>`_
 
     remove_orphans
         Remove containers not defined in the composition. Defaults to True.
@@ -193,6 +199,7 @@ def installed(
             project_name=project_name,
             create_pod=create_pod,
             pod_args=pod_args,
+            podman_create_args=podman_create_args,
             remove_orphans=remove_orphans,
             force_recreate=force_recreate,
             user=user,
