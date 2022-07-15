@@ -148,15 +148,9 @@ def _run(
 
     # https://bugs.python.org/issue47002
     # podman-compose uses argparse, which has problems with --opt '--something'
-    # thus use --opt='--something' @FIXME
-    args = [
-        "--{} {}".format(*arg) if isinstance(arg, tuple) else "--{}".format(arg)
-        for arg in args
-    ]
-    cmd_args = [
-        "--{} {}".format(*arg) if isinstance(arg, tuple) else "--{}".format(arg)
-        for arg in cmd_args
-    ]
+    # thus use --opt='--something'
+    args = _parse_args(args, include_equal=True)
+    cmd_args = _parse_args(cmd_args, include_equal=True)
     cmd = [bin_path] + args + [command] + cmd_args
 
     if params is not None:
