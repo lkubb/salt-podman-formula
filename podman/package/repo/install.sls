@@ -64,6 +64,13 @@ Podman {{ reponame }} repository is available:
 {%-     endfor %}
 {%-     if podman.lookup.pkg_manager in ['dnf', 'yum', 'zypper'] %}
     - enabled: 1
+{%-     elif 'apt' == podman.lookup.pkg_manager %}
+    # This state module is not actually idempotent in many circumstances
+    # https://github.com/saltstack/salt/pull/61986
+    # workaround for this formula
+    - unless:
+      - fun: file.file_exists
+        path: {{ config.file }}
 {%-     endif %}
     - require_in:
       - podman-package-install-pkg-installed
