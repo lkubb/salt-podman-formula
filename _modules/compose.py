@@ -1220,6 +1220,7 @@ def install(
     project_name=None,
     create_pod=None,
     pod_args=None,
+    pod_args_override_default=False,
     podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
@@ -1264,6 +1265,9 @@ def install(
         To support ``systemd`` managed pods, an infra container is necessary. Otherwise,
         none of the namespaces are shared by default. In summary,
         ["infra", {"share": ""}] is default.
+
+    pod_args_override_default
+        If pod_args are specified, do not add them to the default values. Defaults to False.
 
     podman_create_args
         List of custom arguments to ``podman create``. This can be used to pass
@@ -1339,7 +1343,10 @@ def install(
             "Your podman-compose does not support customization of pod creation. Overriding."
         )
 
-    pod_args = pod_args or ["infra", {"share": ""}]
+    if pod_args_override_default:
+        pod_args = pod_args or ["infra", {"share": ""}]
+    else:
+        pod_args = (pod_args or []) + ["infra", {"share": ""}]
     podman_create_args = podman_create_args or []
 
     args = [("file", composition), ("project-name", project_name)]

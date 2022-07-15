@@ -56,6 +56,7 @@ def installed(
     project_name=None,
     create_pod=None,
     pod_args=None,
+    pod_args_override_default=False,
     podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
@@ -99,6 +100,9 @@ def installed(
         To support ``systemd`` managed pods, an infra container is necessary. Otherwise,
         none of the namespaces are shared by default. In summary,
         ["infra", {"share": ""}] is default.
+
+    pod_args_override_default
+        If pod_args are specified, do not add them to the default values. Defaults to False.
 
     podman_create_args
         List of custom arguments to ``podman create``. This can be used to pass
@@ -199,6 +203,7 @@ def installed(
             project_name=project_name,
             create_pod=create_pod,
             pod_args=pod_args,
+            pod_args_override_default=pod_args_override_default,
             podman_create_args=podman_create_args,
             remove_orphans=remove_orphans,
             force_recreate=force_recreate,
