@@ -1101,6 +1101,8 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     def parse_arguments(args):
         parsed = {"options": {}, "params": []}
         args = shlex.split(args)
+        # newline chars mess up the "logic"
+        args = [x for x in args if x not in ["\n"]]
         cur, num = 0, len(args)
         options_finished = False
 
@@ -1133,11 +1135,11 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     # it has to exist in podman. Better to let it handle ps.
 
     non_ephemeral = re.findall(
-        r"ExecStart=[a-z\/]+podman start(.*)", contents, flags=re.MULTILINE
+        r"^ExecStart=[a-z\/]+podman start([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)", contents, flags=re.MULTILINE
     )
     if non_ephemeral:
         args = parse_arguments(non_ephemeral[0])
-        return ps(name=args["parameters"][0])
+        return ps(name=args["params"][0])
 
     pod = re.findall(
         r"^ExecStartPre=[a-z\/]+podman pod create(.*)", contents, flags=re.MULTILINE
@@ -1146,7 +1148,7 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
         # @TODO better parsing? flags are returned as True (python)
         return parse_arguments(pod[0])
 
-    cnt = re.findall(r"^ExecStart=[a-z\/]+podman run(.*)", contents, flags=re.MULTILINE)
+    cnt = re.findall(r"^ExecStart=[a-z\/]+podman run([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)", contents, flags=re.MULTILINE)
     if not cnt:
         raise CommandExecutionError(
             "Failed parsing unit {unit}. Was it created by podman?"
