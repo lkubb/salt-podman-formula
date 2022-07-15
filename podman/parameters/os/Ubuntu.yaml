@@ -15,8 +15,17 @@ values:
   lookup:
     repos:
       # discouraged, this has been discontinued
-      kubic:
-        # https://github.com/saltstack/salt/issues/58010
-        name: deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ grains.osrelease }} /  # yamllint disable-line rule:line-length
-        key_url: http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ grains.osrelease }}/Release.key  # yamllint disable-line rule:line-length
+      kubic_deprecated:
+        # osrelease, not osmajorrelease > https://github.com/saltstack/salt/issues/58010
+        name: deb [signed-by=/usr/share/keyrings/kubic_deprecated.gpg] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_{{ grains.osrelease }} /  # yamllint disable-line rule:line-length
+        keyring:
+          source: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_{{ grains.osrelease }}/Release.key  # yamllint disable-line rule:line-length
+      kubic_unstable:
+        name: deb [signed-by=/usr/share/keyrings/kubic_unstable.gpg] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_{{ grains.osrelease }} /  # yamllint disable-line rule:line-length
+        keyring:
+          source: https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_{{ grains.osrelease }}/Release.key  # yamllint disable-line rule:line-length
+      alvistack:
+        name: deb [signed-by=/usr/share/keyrings/alvistack.gpg] http://downloadcontent.opensuse.org/repositories/home:/alvistack/xUbuntu_{{ grains.osrelease }} /  # yamllint disable-line rule:line-length
+        keyring:
+          source: https://downloadcontent.opensuse.org/repositories/home:alvistack/xUbuntu_{{ grains.osrelease }}/Release.key  # yamllint disable-line rule:line-length
 ...

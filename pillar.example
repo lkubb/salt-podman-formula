@@ -3,8 +3,16 @@
 # yamllint disable rule:comments-indentation
 ---
 podman:
+    # This will be disregarded when install_method != pkg or
+    # debian_unstable / debian_experimental is active.
   version: latest
-  install_method: pkg  # [system]pkg or repo (kubic only currently, discouraged)
+    # pkg (= distribution default repository) or repo
+    # If you choose repo, by default, it will install from alvistack OBS
+    # repository. This is only supported for Debian and Ubuntu.
+    # You can switch to another repo (eg kubic unstable), see `lookup:enablerepo`
+    # and `parameters/os_family/Debian.yaml` or `parameters/os/Ubuntu.yaml`.
+    # Make sure podman is currently not installed before enabling alternative repos.
+  install_method: pkg
   compose:
       # Whether to install docker-compose, podman-compose or nothing.
       # For docker-compose, you will need to set `service_enable: true`
@@ -74,6 +82,7 @@ podman:
     # (current stable repo) by enabling unstable/experimental.
     # Version 3.4/4 can be installed that way, although it is
     # discouraged to mix stable and unstable/experimental.
+    # Better use alternative repositories like alvistack (see install_method).
     # `version` will be disregarded.
     # Note that experimental will fail currently if you are on another branch.
     # Having compose enabled, this formula might still default to legacy
@@ -121,6 +130,7 @@ podman:
       registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
+    enablerepo: alvistack
     required_pkgs:
       - git
       - python3-pip

@@ -21,7 +21,7 @@ include:
 Debian experimental repository is active:
   pkgrepo.managed:
     - humanname: Debian experimental
-    - name: deb http://deb.debian.org/debian/ experimental main contrib non-free
+    - name: deb http://deb.debian.org/debian experimental main contrib non-free
     - file: /etc/apt/sources.list
     - require_in:
       - podman-package-install-pkg-installed
@@ -44,7 +44,7 @@ Debian experimental repository is pinned to low priority to not install all expe
 Debian unstable repository is active:
   pkgrepo.managed:
     - humanname: Debian unstable
-    - name: deb http://deb.debian.org/debian/ unstable main contrib non-free
+    - name: deb http://deb.debian.org/debian unstable main contrib non-free
     - file: /etc/apt/sources.list
     - require_in:
       - podman-package-install-pkg-installed
@@ -65,19 +65,24 @@ Debian unstable repository is pinned to low priority to not install all unstable
 {%-   endif %}
 {%- endif %}
 
-{%- if not podman.debian_unstable %}
-
-podman-package-install-pkg-installed:
-  pkg.installed:
-    - name: {{ podman.lookup.pkg.name }}
-    - version: {{ podman.version }}
-
-{%- else %}
+{%- if "pkg" == podman.install_method and "Debian" == grains.os and podman.debian_unstable %}
 
 podman-package-install-pkg-installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.pkg.unstable }}
-{%- endif %}
+
+{%- elif "repo" == podman.install_method and podman.lookup.enablerepo in podman.lookup.pkg %}
+
+podman-package-install-pkg-installed:
+  pkg.installed:
+    - pkgs: {{ podman.lookup.pkg[podman.lookup.enablerepo] }}
+
+{%-   else %}
+
+podman-package-install-pkg-installed:
+  pkg.installed:
+    - name: {{ podman.lookup.pkg.name }}
+{%-   endif %}
 
 # this installs pip and git, which are required for this formula
 Podman required packages are installed:

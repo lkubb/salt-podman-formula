@@ -13,16 +13,14 @@ include:
 {%-   endif %}
 
 {%- else %}
-{%-   for reponame, enabled in podman.lookup.enablerepo.items() %}
-{%-     if enabled %}
+{%-   set reponame = podman.lookup.enablerepo %}
+{%-   set config = podman.lookup.repos[reponame] %}
 
 Podman {{ reponame }} repository is absent:
   pkgrepo.absent:
-{%-       for conf in ['name', 'ppa', 'ppa_auth', 'keyid', 'keyid_ppa', 'copr'] %}
-{%-         if conf in podman.lookup.repos[reponame] %}
-    - {{ conf }}: {{ podman.lookup.repos[reponame][conf] }}
-{%-         endif %}
-{%-       endfor %}
+{%-   for conf in ['name', 'ppa', 'ppa_auth', 'keyid', 'keyid_ppa', 'copr'] %}
+{%-     if conf in config %}
+    - {{ conf }}: {{ config[conf] }}
 {%-     endif %}
 {%-   endfor %}
 {%- endif %}

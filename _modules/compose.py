@@ -146,6 +146,9 @@ def _run(
     if json:
         cmd_args.append(("format", "json"))
 
+    # https://bugs.python.org/issue47002
+    # podman-compose uses argparse, which has problems with --opt '--something'
+    # thus use --opt='--something' @FIXME
     args = [
         "--{} {}".format(*arg) if isinstance(arg, tuple) else "--{}".format(arg)
         for arg in args
