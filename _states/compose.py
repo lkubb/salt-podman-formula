@@ -63,6 +63,7 @@ def installed(
     user=None,
     ephemeral=True,
     restart_policy=None,
+    restart_sec=None,
     stop_timeout=None,
     enable=True,
     pod_prefix=None,
@@ -128,6 +129,9 @@ def installed(
     restart_policy
         Unit restart policy, defaults to ``on-failure``.
         This is not taken from the compose definition @TODO
+
+    restart_sec
+        Specify systemd RestartSec.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -210,6 +214,7 @@ def installed(
             user=user,
             ephemeral=ephemeral,
             restart_policy=restart_policy,
+            restart_sec=restart_sec,
             stop_timeout=stop_timeout,
             enable_units=enable,
             now=False,

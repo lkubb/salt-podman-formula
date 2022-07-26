@@ -339,6 +339,45 @@ def _loginctl(command, cmd_args=None, params=None, expect_error=False):
     )
 
 
+def _journalctl(
+    unit,
+    runas=None,
+    raise_error=True,
+    expect_error=False,
+    env=None,
+):
+    """
+    Helper for running arbitary ``systemctl`` commands related to podman services.
+    """
+
+    args = []
+    env = env or []
+
+    if runas:
+        uid = _user_info(runas, "uid")
+        xdg_runtime_dir = f"/run/user/{uid}"
+        dbus_session_bus = f"{xdg_runtime_dir}/bus"
+
+        if not Path(dbus_session_bus).exists():
+            raise CommandExecutionError(
+                f"User {runas} does not have lingering enabled. This is required to run systemctl as a user that does not have a login session."
+            )
+
+        args = ["user", "reverse"] + [("unit", unit)] + args
+        env.append({"XDG_RUNTIME_DIR": xdg_runtime_dir})
+        env.append({"DBUS_SESSION_BUS_ADDRESS": f"unix:path={dbus_session_bus}"})
+
+    return _run(
+        "journalctl",
+        "",
+        args=args,
+        runas=runas,
+        raise_error=raise_error,
+        expect_error=expect_error,
+        env=env,
+    )
+
+
 def _user_info(user, var=""):
     """
     Helper for inspecting a user account.
@@ -1135,7 +1174,9 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     # it has to exist in podman. Better to let it handle ps.
 
     non_ephemeral = re.findall(
-        r"^ExecStart=[a-z\/]+podman start([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)", contents, flags=re.MULTILINE
+        r"^ExecStart=[a-z\/]+podman start([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)",
+        contents,
+        flags=re.MULTILINE,
     )
     if non_ephemeral:
         args = parse_arguments(non_ephemeral[0])
@@ -1148,7 +1189,11 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
         # @TODO better parsing? flags are returned as True (python)
         return parse_arguments(pod[0])
 
-    cnt = re.findall(r"^ExecStart=[a-z\/]+podman run([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)", contents, flags=re.MULTILINE)
+    cnt = re.findall(
+        r"^ExecStart=[a-z\/]+podman run([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)",
+        contents,
+        flags=re.MULTILINE,
+    )
     if not cnt:
         raise CommandExecutionError(
             "Failed parsing unit {unit}. Was it created by podman?"
@@ -1223,6 +1268,7 @@ def install(
     user=None,
     ephemeral=True,
     restart_policy=None,
+    restart_sec=None,
     stop_timeout=None,
     enable_units=True,
     now=False,
@@ -1290,6 +1336,9 @@ def install(
     restart_policy
         Unit restart policy, defaults to ``on-failure``.
         This is not taken from the compose definition @TODO
+
+    restart_sec
+        Specify systemd RestartSec.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -1386,6 +1435,7 @@ def install(
         user=user,
         ephemeral=ephemeral,
         restart_policy=restart_policy,
+        restart_sec=restart_sec,
         stop_timeout=stop_timeout,
         enable_units=enable_units,
         now=now,
@@ -1400,6 +1450,7 @@ def install_units(
     user=None,
     ephemeral=True,
     restart_policy=None,
+    restart_sec=None,
     stop_timeout=None,
     generate_only=False,
     enable_units=True,
@@ -1441,6 +1492,9 @@ def install_units(
     restart_policy
         Unit restart policy, defaults to ``on-failure``.
         This is not taken from the compose definition @TODO
+
+    restart_sec
+        Specify systemd RestartSec.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -1496,6 +1550,8 @@ def install_units(
         cmd_args.append("new")
     if restart_policy is not None:
         cmd_args.append(("restart-policy", restart_policy))
+    if restart_sec is not None:
+        cmd_args.append(("restart-sec", restart_sec))
     if stop_timeout is not None:
         cmd_args.append(("time", stop_timeout))
 
@@ -1549,6 +1605,57 @@ def install_units(
             user=user,
         )
     return True
+
+
+@_needs_compose
+def logs(
+    composition,
+    project_name=None,
+    container=None,
+    user=None,
+):
+    """
+    Show logs of a composition.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.logs gitea
+
+    composition
+        Some reference about where to find the project definitions.
+        Can be an absolute path to the composition definitions (``docker-compose.yml``),
+        the name of a project with available containers or the name
+        of a directory in ``compose.containers_base``.
+
+    project_name
+        The name of the project. Defaults to the name of the parent directory
+        of the composition file.
+
+    container
+        Only show logs of this container.
+
+    user
+        Run the command as this user. Defaults to the composition file parent dir owner
+        (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+
+    composition = find_compose_file(composition)
+    project_name = project_name or _project_to_project_name(composition)
+    user = user or _find_user(composition)
+
+    args = [("file", composition), ("project-name", project_name)]
+    params = [container] if container else []
+
+    return _podman_compose(
+        "logs",
+        args=args,
+        runas=user,
+        params=params,
+        cwd=str(Path(composition).parent),
+    )
 
 
 def remove(
@@ -1877,6 +1984,102 @@ def ps(
     if id_only or pod_only:
         return list(out["stdout"].splitlines())
     return out["parsed"]
+
+
+def journal(
+    composition,
+    max_lines=10,
+    project_name=None,
+    container_prefix=None,
+    pod_prefix=None,
+    separator=None,
+    user=None,
+):
+
+    composition = find_compose_file(composition)
+    user = user or _find_user(composition)
+    units = list_installed_units(
+        composition,
+        project_name=project_name,
+        container_prefix=container_prefix,
+        pod_prefix=pod_prefix,
+        separator=separator,
+        user=user,
+    )
+    out = {}
+
+    for unit in units["containers"]:
+        journal = _journalctl(unit, runas=user)["stdout"].splitlines()
+        if len(journal) > max_lines:
+            journal = journal[:max_lines]
+        out[unit] = "\n".join(journal)
+
+    return out
+
+
+def status(
+    composition,
+    project_name=None,
+    container_prefix=None,
+    pod_prefix=None,
+    separator=None,
+    user=None,
+):
+    """
+    Show systemctl status for the composition's service units.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.list_installed_units /opt/gitea/docker-compose.yml
+
+    composition
+        Some reference about where to find the project definitions.
+        Can be an absolute path to the composition definitions (``docker-compose.yml``),
+        the name of a project with available containers or the name
+        of a directory in ``compose.containers_base``.
+
+    project_name
+        The name of the project. Defaults to the name of the parent directory
+        of the composition file.
+
+    container_prefix:
+        Unit name prefix for containers. Defaults to empty.
+        A different default can be set in ``compose.default_container_prefix``.
+
+    pod_prefix
+        Unit name prefix for pods. Defaults to empty
+        (podman-compose prefixes pod names with pod_ already).
+        A different default can be set in ``compose.default_pod_prefix``.
+
+    separator
+        Unit name separator between prefix and name/id.
+        Depending on the other prefixes, defaults to empty or dash.
+
+    user
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+
+    composition = find_compose_file(composition)
+    user = user or _find_user(composition)
+    units = list_installed_units(
+        composition,
+        project_name=project_name,
+        container_prefix=container_prefix,
+        pod_prefix=pod_prefix,
+        separator=separator,
+        user=user,
+    )
+    out = {}
+
+    for unit in units["containers"]:
+        status = _systemctl_status(unit, user)
+        out[unit] = status
+
+    return out
 
 
 def disable(
