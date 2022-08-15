@@ -885,6 +885,256 @@ def lingering_managed(name, enable):
     return ret
 
 
+def systemd_service_enabled(
+    name,
+    user=None,
+):
+    """
+    Make sure a systemd unit is enabled. This is an extension to the
+    official module, which allows to manage services for arbitrary user accounts.
+    This does not support mod_watch behavior. Also, it should be a separate module @TODO
+
+    name
+        Name of the systemd unit.
+
+    user
+        User account the unit should be enabled for. Defaults to Salt process user.
+    """
+
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+
+    try:
+        if __salt__["compose.systemctl_is_enabled"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} is already enabled."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"Service {name} is set to be enabled."
+            ret["changes"]["enabled"] = name
+            return ret
+
+        if __salt__["compose.systemctl_enable"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} has been enabled."
+            ret["changes"]["enabled"] = name
+        else:
+            raise CommandExecutionError(
+                f"Something went wrong while trying to stop service {name}. This should not happen."
+            )
+
+        if not __salt__["compose.systemctl_is_enabled"](
+            name,
+            user=user,
+        ):
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Tried to enable the service, but it is reported as disabled."
+            ret["changes"] = {}
+
+    except (CommandExecutionError, SaltInvocationError) as e:
+        ret["result"] = False
+        ret["comment"] = str(e)
+
+    return ret
+
+
+def systemd_service_running(name, user=None, timeout=10):
+    """
+    Make sure a systemd unit is running. This is an extension to the
+    official module, which allows to manage services for arbitrary user accounts.
+    This does not support mod_watch behavior. Also, it should be a separate module @TODO
+
+    name
+        Name of the systemd unit.
+
+    user
+        User account the unit should be running for. Defaults to Salt process user.
+
+    timeout
+        This state checks whether the service was started successfully. This configures
+        the maximum wait time in seconds. Defaults to 10.
+    """
+
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+
+    try:
+        if __salt__["compose.systemctl_is_running"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} is already running."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"Service {name} is set to be started."
+            ret["changes"]["started"] = name
+            return ret
+
+        if __salt__["compose.systemctl_start"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} has been started."
+            ret["changes"]["started"] = name
+        else:
+            raise CommandExecutionError(
+                f"Something went wrong while trying to start service {name}. This should not happen."
+            )
+
+        start_time = time.time()
+
+        while not __salt__["compose.systemctl_is_running"](
+            name,
+            user=user,
+        ):
+            if time.time() - start_time > timeout:
+                ret["result"] = False
+                ret[
+                    "comment"
+                ] = "Tried to start the service, but it is still not running."
+                ret["changes"] = {}
+                return ret
+            time.sleep(0.25)
+
+    except (CommandExecutionError, SaltInvocationError) as e:
+        ret["result"] = False
+        ret["comment"] = str(e)
+
+    return ret
+
+
+def systemd_service_disabled(
+    name,
+    user=None,
+):
+    """
+    Make sure a systemd unit is disabled. This is an extension to the
+    official module, which allows to manage services for arbitrary user accounts.
+    This does not support mod_watch behavior. Also, it should be a separate module @TODO
+
+    name
+        Name of the systemd unit.
+
+    user
+        User account the unit should be disabled for. Defaults to Salt process user.
+    """
+
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+
+    try:
+        if not __salt__["compose.systemctl_is_enabled"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} is already disabled."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"Service {name} is set to be disabled."
+            ret["changes"]["disabled"] = name
+            return ret
+
+        if __salt__["compose.systemctl_disable"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} has been disabled."
+            ret["changes"]["disabled"] = name
+        else:
+            raise CommandExecutionError(
+                f"Something went wrong while trying to stop service {name}. This should not happen."
+            )
+
+        if not __salt__["compose.systemctl_is_disabled"](
+            name,
+            user=user,
+        ):
+            ret["result"] = False
+            ret[
+                "comment"
+            ] = "Tried to disable the service, but it is reported as enabled."
+            ret["changes"] = {}
+
+    except (CommandExecutionError, SaltInvocationError) as e:
+        ret["result"] = False
+        ret["comment"] = str(e)
+
+    return ret
+
+
+def systemd_service_dead(name, user=None, timeout=10):
+    """
+    Make sure a systemd unit is dead. This is an extension to the
+    official module, which allows to manage services for arbitrary user accounts.
+    This does not support mod_watch behavior. Also, it should be a separate module @TODO
+
+    name
+        Name of the systemd unit.
+
+    user
+        User account the unit should be dead for. Defaults to Salt process user.
+
+    timeout
+        This state checks whether the service was stopped successfully. This configures
+        the maximum wait time in seconds. Defaults to 10.
+    """
+
+    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+
+    try:
+        if not __salt__["compose.systemctl_is_running"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} is already dead."
+            return ret
+
+        if __opts__["test"]:
+            ret["result"] = None
+            ret["comment"] = f"Service {name} is set to be stopped."
+            ret["changes"]["stopped"] = name
+            return ret
+
+        if __salt__["compose.systemctl_stop"](
+            name,
+            user=user,
+        ):
+            ret["comment"] = f"Service {name} has been stopped."
+            ret["changes"]["stopped"] = name
+        else:
+            raise CommandExecutionError(
+                f"Something went wrong while trying to stop service {name}. This should not happen."
+            )
+
+        start_time = time.time()
+
+        while __salt__["compose.systemctl_is_running"](
+            name,
+            user=user,
+        ):
+            if time.time() - start_time > timeout:
+                ret["result"] = False
+                ret["comment"] = "Tried to stop the service, but it is still running."
+                ret["changes"] = {}
+                return ret
+            time.sleep(0.25)
+
+    except (CommandExecutionError, SaltInvocationError) as e:
+        ret["result"] = False
+        ret["comment"] = str(e)
+
+    return ret
+
+
 def mod_watch(name, sfun=None, *args, **kwargs):
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     target = "Service"

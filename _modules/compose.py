@@ -514,6 +514,226 @@ def _unit_file_changed(name, user=None):
     return "'systemctl daemon-reload'" in status
 
 
+def systemctl(
+    command,
+    args=None,
+    cmd_args=None,
+    params=None,
+    user=None,
+):
+    """
+    Run arbitrary systemctl commands. This is an extension to the
+    official module, which allows executing this for a specific
+    user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl start params=[gitea.service] user=gitea
+
+    command
+        systemctl subcommand to execute
+
+    args
+        Command line options for systemctl itself to pass.
+
+    cmd_args
+        Command line options for the systemctl subcommand to pass.
+
+    params
+        Arguments to pass to the systemctl subcommand.
+        @TODO naming is absolutely horrific in this module
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    return _systemctl(command, args=args, cmd_args=cmd_args, params=params, runas=user)
+
+
+def systemctl_status(name, user=None):
+    """
+    Returns the output of systemctl status (cmd.run_all).
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_status podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+    return _systemctl_status(name, user)
+
+
+def systemctl_is_enabled(unit, user=None):
+    """
+    Check whether a systemd unit is enabled. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_is_enabled podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("is-enabled", params=[unit], runas=user, expect_error=True)
+    return "enabled" == out["stdout"]
+
+
+def systemctl_is_running(unit, user=None):
+    """
+    Check whether a systemd unit is running. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_is_running podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("is-active", params=[unit], runas=user, expect_error=True)
+    return 0 == out["retcode"]
+
+
+def systemctl_start(unit, user=None):
+    """
+    Start a systemd unit. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_start podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("start", params=[unit], runas=user)
+    return True
+
+
+def systemctl_stop(unit, user=None):
+    """
+    Stop a systemd unit. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_stop podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("stop", params=[unit], runas=user)
+    return True
+
+
+def systemctl_restart(unit, user=None):
+    """
+    Restart a systemd unit. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_restart podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("restart", params=[unit], runas=user)
+    return True
+
+
+def systemctl_enable(unit, user=None):
+    """
+    Enable a systemd unit. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_enable podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("enable", params=[unit], runas=user)
+    return True
+
+
+def systemctl_disable(unit, user=None):
+    """
+    Disable a systemd unit. This is an extension to the
+    official module, which allows executing this for a specific user.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.systemctl_disable podman.sock drone
+
+    unit
+        Name of the systemd unit.
+
+    user
+        The user to run systemctl with. Defaults to
+        Salt process user.
+    """
+
+    out = _systemctl("disable", params=[unit], runas=user)
+    return True
+
+
 def systemctl_reload(user=None):
     """
     Reloads systemd unit files. This is an extension to the
@@ -2076,7 +2296,7 @@ def status(
     out = {}
 
     for unit in units["containers"]:
-        status = _systemctl_status(unit, user)
+        status = systemctl_status(unit, user)
         out[unit] = status
 
     return out
@@ -2153,7 +2373,7 @@ def disable(
 
     for service in disable_services:
         _check_for_unit_changes(service, user)
-        _systemctl("disable", params=[service], runas=user)
+        systemctl_disable(service, user)
 
     return True
 
@@ -2229,7 +2449,7 @@ def enable(
 
     for service in enable_services:
         _check_for_unit_changes(service, user)
-        _systemctl("enable", params=[service], runas=user)
+        systemctl_enable(service, user)
 
     return True
 
@@ -2307,7 +2527,7 @@ def restart(
     # probably needs to stop all services and then start the pod again
     for service in restart_services:
         _check_for_unit_changes(service, user)
-        _systemctl("restart", params=[service], runas=user)
+        systemctl_restart(service, user)
 
     return True
 
@@ -2383,7 +2603,7 @@ def start(
 
     for service in start_services:
         _check_for_unit_changes(service, user)
-        _systemctl("start", params=[service], runas=user)
+        systemctl_start(service, user)
 
     return True
 
@@ -2459,7 +2679,7 @@ def stop(
 
     for service in stop_services:
         _check_for_unit_changes(service, user)
-        _systemctl("stop", params=[service], runas=user)
+        systemctl_stop(service, user)
 
     return True
 
@@ -2545,10 +2765,8 @@ def is_disabled(
     enabled = []
 
     for service in disabled_services:
-        out = _systemctl("is-enabled", params=[service], runas=user, expect_error=True)
-        if "disabled" == out["stdout"]:
-            continue
-        enabled.append(service)
+        if systemctl_is_enabled(service, user):
+            enabled.append(service)
 
     if show_missing:
         return enabled
@@ -2634,10 +2852,8 @@ def is_enabled(
     disabled = []
 
     for service in enabled_services:
-        out = _systemctl("is-enabled", params=[service], runas=user, expect_error=True)
-        if "enabled" == out["stdout"]:
-            continue
-        disabled.append(service)
+        if not systemctl_is_enabled(service, user):
+            disabled.append(service)
 
     if show_missing:
         return disabled
@@ -2722,10 +2938,8 @@ def is_running(
     inactive = []
 
     for service in running_services:
-        out = _systemctl("is-active", params=[service], runas=user, expect_error=True)
-        if 0 == out["retcode"]:
-            continue
-        inactive.append(service)
+        if not systemctl_is_running(service, user):
+            inactive.append(service)
 
     if show_missing:
         return inactive
@@ -2812,10 +3026,8 @@ def is_dead(
     active = []
 
     for service in dead_services:
-        out = _systemctl("is-active", params=[service], runas=user, expect_error=True)
-        if 0 != out["retcode"]:
-            continue
-        active.append(service)
+        if systemctl_is_running(service, user):
+            active.append(service)
 
     if show_missing:
         return active
