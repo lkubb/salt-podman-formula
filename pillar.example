@@ -19,7 +19,8 @@ podman:
       # docker, podman, false
     install: false
       # Install the custom Salt execution and state modules found
-      # in this formula
+      # in this formula. They will not be updated automatically once
+      # they are present.
     install_modules: false
       # Set to true to install from the github repo's latest commit
       # on the default branch or specify exact git rev to install.

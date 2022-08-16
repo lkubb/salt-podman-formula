@@ -165,15 +165,6 @@ podman-compose is installed:
 Custom compose Salt modules are installed:
   saltutil.sync_all:
     - refresh: true
-    - extmod_whitelist:
-        modules:
-          - compose
-        states:
-          - compose
-        beacons: []
-        grains: []
-        returners: []
-        output: []
-        renderers: []
-        utils: []
+    - unless:
+      - {{ "compose" in salt["saltutil.list_extmods"]().get("states", []) | lower }}
 {%- endif %}
