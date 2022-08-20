@@ -111,7 +111,7 @@ def _needs_compose(func):
 
 def __virtual__():
     """
-    Only load the module if nginx is installed
+    Only load the module if podman is installed
     """
 
     if _which_podman():
@@ -1545,7 +1545,7 @@ def install(
         no_recreate is currently not implemented by podman-compose.
 
     user
-        Install a rootless containers under this user account instead
+        Install rootless containers under this user account instead
         of rootful ones. Defaults to the composition file parent dir owner
         (depending on ``compose.default_to_dirowner``)
         or Salt process user. By default, defaults to the parent dir owner.
@@ -1888,10 +1888,7 @@ def remove(
     user=None,
 ):
     """
-    Install a container composition.
-
-    This will create the necessary resources and
-    generate systemd units dedicated to managing their lifecycle.
+    Remove a container composition. Requires the service(s) to be dead.
 
     CLI Example:
 
@@ -1928,9 +1925,8 @@ def remove(
         Depending on the other prefixes, defaults to empty or dash.
 
     user
-        Install a rootless containers under this user account instead
-        of rootful ones. Defaults to the composition file parent dir owner
-        (depending on ``compose.default_to_dirowner``)
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
         or Salt process user. By default, defaults to the parent dir owner.
     """
 
