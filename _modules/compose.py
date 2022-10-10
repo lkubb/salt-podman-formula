@@ -1485,6 +1485,8 @@ def install(
     podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
+    build=False,
+    build_args=None,
     user=None,
     ephemeral=True,
     restart_policy=None,
@@ -1543,6 +1545,12 @@ def install(
         Always recreate containers, even if their configuration and images
         have not changed. Defaults to False.
         no_recreate is currently not implemented by podman-compose.
+
+    build
+        Build images before starting containers. Defaults to False.
+
+    build_args
+        Set build-time variables for services.
 
     user
         Install rootless containers under this user account instead
@@ -1638,6 +1646,10 @@ def install(
         cmd_args.append("remove-orphans")
     if force_recreate:
         cmd_args.append("force-recreate")
+    if build:
+        cmd_args.append("build")
+    if build_args:
+        cmd_args.extend(("build-arg", f"{k}={v}") for k, v in build_args.items())
 
     _podman_compose(
         "up",

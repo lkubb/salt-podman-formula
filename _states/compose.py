@@ -59,6 +59,8 @@ def installed(
     podman_create_args=None,
     remove_orphans=True,
     force_recreate=False,
+    build=False,
+    build_args=None,
     user=None,
     ephemeral=True,
     restart_policy=None,
@@ -115,6 +117,12 @@ def installed(
     force_recreate
         Always recreate containers, even if their configuration and images
         have not changed. Defaults to False.
+
+    build
+        Build images before starting containers. Defaults to False.
+
+    build_args
+        Set build-time variables for services.
 
     user
         Install a rootless containers under this user account instead
@@ -210,6 +218,8 @@ def installed(
             podman_create_args=podman_create_args,
             remove_orphans=remove_orphans,
             force_recreate=force_recreate,
+            build=build,
+            build_args=build_args,
             user=user,
             ephemeral=ephemeral,
             restart_policy=restart_policy,
