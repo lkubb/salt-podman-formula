@@ -44,7 +44,6 @@ from salt.utils.args import get_function_argspec as _argspec
 
 
 def _get_valid_args(func, kwargs):
-    ret = {}
     valid_args = _argspec(func).args
 
     return {arg: kwargs[arg] for arg in valid_args if arg in kwargs}
@@ -131,7 +130,7 @@ def installed(
         This is not taken from the compose definition @TODO
 
     restart_sec
-        Specify systemd RestartSec.
+        Specify systemd RestartSec. Requires at least podman v4.3.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -1201,7 +1200,7 @@ def mod_watch(name, sfun=None, *args, **kwargs):
             return ret
 
         func_kwargs = _get_valid_args(func, kwargs)
-        result = func(name, **func_kwargs)
+        func(name, **func_kwargs)
 
         if check_func:
             timeout = kwargs.get("timeout", 10)

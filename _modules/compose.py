@@ -1558,7 +1558,7 @@ def install(
         This is not taken from the compose definition @TODO
 
     restart_sec
-        Specify systemd RestartSec.
+        Specify systemd RestartSec. Requires at least podman v4.3.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -1714,7 +1714,7 @@ def install_units(
         This is not taken from the compose definition @TODO
 
     restart_sec
-        Specify systemd RestartSec.
+        Specify systemd RestartSec. Requires at least podman v4.3.
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
@@ -1771,7 +1771,12 @@ def install_units(
     if restart_policy is not None:
         cmd_args.append(("restart-policy", restart_policy))
     if restart_sec is not None:
-        cmd_args.append(("restart-sec", restart_sec))
+        if __salt__["pkg_resource.version_compare"](podman_version(user), "<", "4.3"):
+            log.info(
+                "Skipping restart_sec since podman generate systemd does not support it below v4.3."
+            )
+        else:
+            cmd_args.append(("restart-sec", restart_sec))
     if stop_timeout is not None:
         cmd_args.append(("time", stop_timeout))
 
@@ -3050,6 +3055,29 @@ def version(user=None):
     if out["retcode"]:
         return False
     return out["stdout"]
+
+
+def podman_version(user=None):
+    """
+    Get podman version. Returns False if not installed (in $PATH)
+    or not functional.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.podman_version
+
+    user
+        Find podman version for this user. Defaults to Salt process user.
+    """
+
+    out = _podman("--version", raise_error=False)
+    if out["retcode"]:
+        return False
+    version = re.findall(r"[0-9\.]+$", out["stdout"])[0]
+
+    return version
 
 
 def _project_to_project_name(project):
