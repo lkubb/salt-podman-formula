@@ -61,6 +61,7 @@ def installed(
     force_recreate=False,
     build=False,
     build_args=None,
+    pull=False,
     user=None,
     ephemeral=True,
     restart_policy=None,
@@ -123,6 +124,10 @@ def installed(
 
     build_args
         Set build-time variables for services.
+
+    pull
+        Whether to pull potential updated images before creating the container.
+        Defaults to False.
 
     user
         Install a rootless containers under this user account instead
@@ -220,6 +225,7 @@ def installed(
             force_recreate=force_recreate,
             build=build,
             build_args=build_args,
+            pull=pull,
             user=user,
             ephemeral=ephemeral,
             restart_policy=restart_policy,

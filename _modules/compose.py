@@ -1487,6 +1487,7 @@ def install(
     force_recreate=False,
     build=False,
     build_args=None,
+    pull=False,
     user=None,
     ephemeral=True,
     restart_policy=None,
@@ -1551,6 +1552,10 @@ def install(
 
     build_args
         Set build-time variables for services.
+
+    pull
+        Whether to pull potential updated images before creating the container.
+        Defaults to False.
 
     user
         Install rootless containers under this user account instead
@@ -1650,6 +1655,8 @@ def install(
         cmd_args.append("build")
     if build_args:
         cmd_args.extend(("build-arg", f"{k}={v}") for k, v in build_args.items())
+    if pull:
+        cmd_args.append("pull")
 
     _podman_compose(
         "up",
