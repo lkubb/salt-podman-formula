@@ -36,11 +36,13 @@ compose.default_container_prefix
 Todo:
     * import/export Kubernetes YAML files
 """
-
+import logging
 import time
 
 from salt.exceptions import CommandExecutionError, SaltInvocationError
 from salt.utils.args import get_function_argspec as _argspec
+
+log = logging.getLogger(__name__)
 
 
 def _get_valid_args(func, kwargs):
@@ -213,6 +215,37 @@ def installed(
             )
             ret["changes"]["installed" if not is_installed else "updated"] = name
             return ret
+
+        if is_installed:
+            # sometimes, podman-compose fails to remove the containers correctly:
+            #   podman stop -t 10 container
+            #   exit code: 0
+            #   podman rm container
+            #   Error: no container with name or ID "container" found: no such container
+            #   exit code: 1
+            #   podman pod rm pod_container
+            #   exit code: 0
+            #   recreating: done
+            # this is intended to be a workaround
+            log.debug("Updating composition.")
+            log.debug("Removing composition to work around podman-compose up issues.")
+            dead(
+                name,
+                project_name=project_name,
+                pod_prefix=pod_prefix,
+                container_prefix=container_prefix,
+                separator=separator,
+                user=user,
+            )
+            removed(
+                name,
+                volumes=False,
+                project_name=project_name,
+                pod_prefix=pod_prefix,
+                container_prefix=container_prefix,
+                separator=separator,
+                user=user,
+            )
 
         if __salt__["compose.install"](
             name,
