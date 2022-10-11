@@ -3069,7 +3069,7 @@ def version(user=None):
         Find podman-compose version for this user. Defaults to Salt process user.
     """
 
-    out = _podman_compose("version", cmd_args=["short"], raise_error=False)
+    out = _podman_compose("version", cmd_args=["short"], runas=user, raise_error=False)
 
     if out["retcode"]:
         return False
@@ -3091,7 +3091,7 @@ def podman_version(user=None):
         Find podman version for this user. Defaults to Salt process user.
     """
 
-    out = _podman("--version", raise_error=False)
+    out = _podman("--version", runas=user, raise_error=False)
     if out["retcode"]:
         return False
     version = re.findall(r"[0-9\.]+$", out["stdout"])[0]
