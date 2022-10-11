@@ -102,7 +102,8 @@ def _needs_compose(func):
     def needs_compose(*args, **kwargs):
         if not _which_podman_compose():
             raise SaltInvocationError(
-                "Running this function requires podman_compose library. Make sure it is importable by Salt."
+                "Running this function requires podman_compose library. "
+                "Make sure it is importable by Salt."
             )
         return func(*args, **kwargs)
 
@@ -157,9 +158,7 @@ def _run(
         cmd += ["--"] + params
 
     log.info(
-        "Running command{}: {}".format(
-            " as user {}".format(runas) if runas else "", " ".join(cmd)
-        )
+        "Running command%s: %s", f" as user {runas}" if runas else "", " ".join(cmd)
     )
 
     out = __salt__["cmd.run_all"](
@@ -172,9 +171,9 @@ def _run(
 
     if not expect_error and raise_error and out["retcode"]:
         raise CommandExecutionError(
-            "Failed running {} {}.\nstderr: {}\nstdout: {}".format(
-                bin_path, command, out["stderr"], out["stdout"]
-            )
+            f"Failed running {bin_path} {command}.\n"
+            f"stderr: {out['stderr']}\n"
+            f"stdout: {out['stdout']}"
         )
 
     if not out["retcode"] and json:
@@ -187,10 +186,7 @@ def _parse_args(args, include_equal=False):
     Helper for parsing lists of arguments into a flat list.
     """
     tpl = "--{}={}" if include_equal else "--{} {}"
-    return [
-        tpl.format(*arg) if isinstance(arg, tuple) else "--{}".format(arg)
-        for arg in args
-    ]
+    return [tpl.format(*arg) if isinstance(arg, tuple) else f"--{arg}" for arg in args]
 
 
 def _convert_args(args):
@@ -306,7 +302,8 @@ def _systemctl(
 
         if not Path(dbus_session_bus).exists():
             raise CommandExecutionError(
-                f"User {runas} does not have lingering enabled. This is required to run systemctl as a user that does not have a login session."
+                f"User {runas} does not have lingering enabled. This is required "
+                "to run systemctl as a user that does not have a login session."
             )
 
         args = ["user"] + args
@@ -360,7 +357,8 @@ def _journalctl(
 
         if not Path(dbus_session_bus).exists():
             raise CommandExecutionError(
-                f"User {runas} does not have lingering enabled. This is required to run systemctl as a user that does not have a login session."
+                f"User {runas} does not have lingering enabled. This is required "
+                "to run systemctl as a user that does not have a login session."
             )
 
         args = ["user", "reverse"] + [("unit", unit)] + args
@@ -510,8 +508,8 @@ def _unit_file_changed(name, user=None):
     returns False.
     This function is modified from the official systemd_service module.
     """
-    status = _systemctl_status(name, user)["stdout"].lower()
-    return "'systemctl daemon-reload'" in status
+    sctl_status = _systemctl_status(name, user)["stdout"].lower()
+    return "'systemctl daemon-reload'" in sctl_status
 
 
 def systemctl(
@@ -638,7 +636,7 @@ def systemctl_start(unit, user=None):
         Salt process user.
     """
 
-    out = _systemctl("start", params=[unit], runas=user)
+    _systemctl("start", params=[unit], runas=user)
     return True
 
 
@@ -661,7 +659,7 @@ def systemctl_stop(unit, user=None):
         Salt process user.
     """
 
-    out = _systemctl("stop", params=[unit], runas=user)
+    _systemctl("stop", params=[unit], runas=user)
     return True
 
 
@@ -684,7 +682,7 @@ def systemctl_restart(unit, user=None):
         Salt process user.
     """
 
-    out = _systemctl("restart", params=[unit], runas=user)
+    _systemctl("restart", params=[unit], runas=user)
     return True
 
 
@@ -707,7 +705,7 @@ def systemctl_enable(unit, user=None):
         Salt process user.
     """
 
-    out = _systemctl("enable", params=[unit], runas=user)
+    _systemctl("enable", params=[unit], runas=user)
     return True
 
 
@@ -730,7 +728,7 @@ def systemctl_disable(unit, user=None):
         Salt process user.
     """
 
-    out = _systemctl("disable", params=[unit], runas=user)
+    _systemctl("disable", params=[unit], runas=user)
     return True
 
 
@@ -812,9 +810,9 @@ def lingering_enabled(user):
 
     if out["retcode"] and "not logged in or lingering" in out["stderr"]:
         return False
-    elif not out["retcode"]:
+    if not out["retcode"]:
         return "Linger=yes" in out["stdout"]
-    raise CommandExecutionError("Failed running loginctl: {}".format(out["stderr"]))
+    raise CommandExecutionError(f"Failed running loginctl: {out['stderr']}")
 
 
 def _get_compose_hash(file):
@@ -861,8 +859,11 @@ def _get_compose_hash(file):
 
         definitions = unescape(definitions)
 
-    return salt.utils.hashutils.sha256_digest(
-        salt.utils.json.dumps(definitions, separators=(",", ":"))
+    return (
+        salt.utils.hashutils.sha256_digest(
+            salt.utils.json.dumps(definitions, separators=(",", ":"))
+        ),
+        definitions,
     )
 
 
@@ -981,16 +982,15 @@ def has_changes(
 
         return ret
 
-    new_hash = _get_compose_hash(composition)
+    new_hash, definitions = _get_compose_hash(composition)
 
     for cnt in containers:
         config_hash = cnt["Labels"].get("io.podman.compose.config-hash")
 
         if not config_hash:
             raise CommandExecutionError(
-                "Could not find configuration hash of container {}. Was it created by podman-compose?".format(
-                    cnt["Id"][:12]
-                )
+                f"Could not find configuration hash of container {cnt['Id'][:12]}. "
+                "Was it created by podman-compose?"
             )
 
         if config_hash != new_hash:
@@ -1073,7 +1073,7 @@ def list_outdated_units(
         user=user,
     )
 
-    new_hash = _get_compose_hash(composition)
+    new_hash, definitions = _get_compose_hash(composition)
     changed = []
 
     for srv in installed_units["containers"]:
@@ -1082,9 +1082,8 @@ def list_outdated_units(
 
         if not config_hash:
             raise CommandExecutionError(
-                "Could not find configuration hash of container {}. Was it created by podman-compose?".format(
-                    cnt["Id"][:12]
-                )
+                f"Could not find configuration hash of container {cnt['Id'][:12]}. "
+                "Was it created by podman-compose?"
             )
 
         if config_hash != new_hash:
@@ -1354,7 +1353,7 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     unit = _canonical_unit_name(unit)
     unit_file = Path(_service_dir(user)) / unit
     if not unit_file.exists():
-        raise SaltInvocationError("File '{}' does not exist.".format(str(unit_file)))
+        raise SaltInvocationError(f"File '{unit_file}' does not exist.")
     contents = unit_file.read_text()
 
     def parse_arguments(args):
@@ -1606,10 +1605,9 @@ def install(
         and create_pod != pc_pod_support["supported"]
         and pc_pod_support["required"]
     ):
-        log.warn(
-            "Your podman-compose {} pod creation. Overriding.".format(
-                "does not" if create_pod else "requires"
-            )
+        log.warning(
+            "Your podman-compose %s pod creation. Overriding.",
+            "does not" if create_pod else "requires",
         )
         # this is actually unnecessary atm, just for consistency
         create_pod = pc_pod_support["supported"]
@@ -1617,7 +1615,7 @@ def install(
         create_pod = pc_pod_support["supported"]
 
     if pod_args is not None and pc_pod_support["required"]:
-        log.warn(
+        log.warning(
             "Your podman-compose does not support customization of pod creation. Overriding."
         )
 
@@ -1763,9 +1761,8 @@ def install_units(
 
     if not ids:
         raise SaltInvocationError(
-            "Could not find existing pod or containers belonging to project {}. Make sure to create them first.".format(
-                project
-            )
+            f"Could not find existing pod or containers belonging to project {project}. "
+            "Make sure to create them first."
         )
 
     cmd_args = [
@@ -1810,9 +1807,7 @@ def install_units(
         for name, unit in out["parsed"].items():
             if name in definitions:
                 raise CommandExecutionError(
-                    "Your configuration resulted in duplicate unit names ({}).".format(
-                        name
-                    )
+                    f"Your configuration resulted in duplicate unit names ({name})."
                 )
             definitions[name] = unit
     if generate_only:
@@ -2235,7 +2230,46 @@ def journal(
     separator=None,
     user=None,
 ):
+    """
+    Show journalctl -u for the composition's service units.
 
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.journal gitea
+
+    composition
+        Some reference about where to find the project definitions.
+        Can be an absolute path to the composition definitions (``docker-compose.yml``),
+        the name of a project with available containers or the name
+        of a directory in ``compose.containers_base``.
+
+    max_lines
+        Maximum log lines per service unit. Defaults to 10.
+
+    project_name
+        The name of the project. Defaults to the name of the parent directory
+        of the composition file.
+
+    container_prefix:
+        Unit name prefix for containers. Defaults to empty.
+        A different default can be set in ``compose.default_container_prefix``.
+
+    pod_prefix
+        Unit name prefix for pods. Defaults to empty
+        (podman-compose prefixes pod names with pod_ already).
+        A different default can be set in ``compose.default_pod_prefix``.
+
+    separator
+        Unit name separator between prefix and name/id.
+        Depending on the other prefixes, defaults to empty or dash.
+
+    user
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
     composition = find_compose_file(composition)
     user = user or _find_user(composition)
     units = list_installed_units(
@@ -2249,10 +2283,10 @@ def journal(
     out = {}
 
     for unit in units["containers"]:
-        journal = _journalctl(unit, runas=user)["stdout"].splitlines()
-        if len(journal) > max_lines:
-            journal = journal[:max_lines]
-        out[unit] = "\n".join(journal)
+        journal_lines = _journalctl(unit, runas=user)["stdout"].splitlines()
+        if len(journal_lines) > max_lines:
+            journal_lines = journal_lines[:max_lines]
+        out[unit] = "\n".join(journal_lines)
 
     return out
 
@@ -2316,8 +2350,8 @@ def status(
     out = {}
 
     for unit in units["containers"]:
-        status = systemctl_status(unit, user)
-        out[unit] = status
+        sctl_status = systemctl_status(unit, user)
+        out[unit] = sctl_status
 
     return out
 
@@ -3094,9 +3128,9 @@ def podman_version(user=None):
     out = _podman("--version", runas=user, raise_error=False)
     if out["retcode"]:
         return False
-    version = re.findall(r"[0-9\.]+$", out["stdout"])[0]
+    _version = re.findall(r"[0-9\.]+$", out["stdout"])[0]
 
-    return version
+    return _version
 
 
 def autoupdate(
@@ -3152,9 +3186,7 @@ def _project_to_project_name(project):
     if project.startswith("/"):
         p = Path(project)
         if not p.exists():
-            raise SaltInvocationError(
-                "Absolute path '{}' does not exist.".format(project)
-            )
+            raise SaltInvocationError(f"Absolute path '{project}' does not exist.")
         return p.parent.name
     return project
 
@@ -3177,9 +3209,7 @@ def find_compose_file(project, user=None, raise_not_found_error=True):
         if not p.exists():
             if not raise_not_found_error:
                 return False
-            raise SaltInvocationError(
-                "Absolute path '{}' does not exist.".format(project)
-            )
+            raise SaltInvocationError(f"Absolute path '{project}' does not exist.")
         return project
 
     containers = ps(project=project, user=user, disable_user_automap=True)
@@ -3194,14 +3224,15 @@ def find_compose_file(project, user=None, raise_not_found_error=True):
         if files:
             if len(files) > 1:
                 raise CommandExecutionError(
-                    f"Tried to autodiscover files for project {project}. Found multiple, which is currently not supported by this module."
+                    f"Tried to autodiscover files for project {project}. "
+                    "Found multiple, which is currently not supported by this module."
                 )
-            return a.pop()
+            return files.pop()
 
     automapped = Path(containers_base) / project / "docker-compose.yml"
     if automapped.exists():
         return str(automapped)
-    elif not raise_not_found_error:
+    if not raise_not_found_error:
         return False
 
     raise SaltInvocationError(
@@ -3226,9 +3257,7 @@ def _find_user(composition):
             return None
         return owner
 
-    raise SaltInvocationError(
-        "Specified composition {} does not exist.".format(str(composition))
-    )
+    raise SaltInvocationError(f"Specified composition {composition} does not exist.")
 
 
 def _try_find_user(project):

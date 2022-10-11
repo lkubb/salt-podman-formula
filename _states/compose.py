@@ -398,9 +398,8 @@ def removed(
             ret["changes"]["removed"] = name
         else:
             raise CommandExecutionError(
-                "Something went wrong while trying to {} composition {}. This should not happen.".format(
-                    "install" if not is_installed else "update", name
-                )
+                f"Something went wrong while trying to remove composition {name}. "
+                "This should not happen."
             )
 
         if __salt__["compose.list_installed_units"](
@@ -526,7 +525,8 @@ def dead(
             ret["changes"]["stopped"] = name
         else:
             raise CommandExecutionError(
-                f"Something went wrong while trying to stop service for {name}. This should not happen."
+                f"Something went wrong while trying to stop service for {name}. "
+                "This should not happen."
             )
 
         start_time = time.time()
@@ -647,7 +647,8 @@ def disabled(
             ret["changes"]["disabled"] = name
         else:
             raise CommandExecutionError(
-                f"Something went wrong while trying to stop service for {name}. This should not happen."
+                f"Something went wrong while trying to stop service for {name}. "
+                "This should not happen."
             )
 
         if not __salt__["compose.is_disabled"](
@@ -743,7 +744,8 @@ def enabled(
             ret["changes"]["enabled"] = name
         else:
             raise CommandExecutionError(
-                f"Something went wrong while trying to stop service for {name}. This should not happen."
+                f"Something went wrong while trying to stop service for {name}. "
+                "This should not happen."
             )
 
         if not __salt__["compose.is_enabled"](
@@ -850,7 +852,8 @@ def running(
             ret["changes"]["started"] = name
         else:
             raise CommandExecutionError(
-                f"Something went wrong while trying to start service for {name}. This should not happen."
+                f"Something went wrong while trying to start service for {name}. "
+                "This should not happen."
             )
 
         start_time = time.time()
@@ -914,7 +917,7 @@ def lingering_managed(name, enable):
         if enable == __salt__["compose.lingering_enabled"](name):
             ret["comment"] = f"Lingering for user {name} is already {verb}d."
             return ret
-        elif __opts__["test"]:
+        if __opts__["test"]:
             ret["result"] = None
             ret["comment"] = f"Lingering for user {name} is set to be {verb}d."
             ret["changes"]["lingering"] = enable
@@ -923,7 +926,8 @@ def lingering_managed(name, enable):
             ret["changes"]["lingering"] = enable
         else:
             raise CommandExecutionError(
-                f"Something went wrong while trying to {verb} lingering for user {name}. This should not happen."
+                f"Something went wrong while trying to {verb} lingering for user {name}. "
+                "This should not happen."
             )
 
     except (CommandExecutionError, SaltInvocationError) as e:
@@ -1183,7 +1187,7 @@ def systemd_service_dead(name, user=None, timeout=10):
     return ret
 
 
-def mod_watch(name, sfun=None, *args, **kwargs):
+def mod_watch(name, sfun=None, **kwargs):
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
     target = "Service"
     pp_suffix = "ed"
@@ -1238,7 +1242,7 @@ def mod_watch(name, sfun=None, *args, **kwargs):
             check_func = False
 
         else:
-            ret["comment"] = "Unable to trigger watch for compose.{}".format(sfun)
+            ret["comment"] = f"Unable to trigger watch for compose.{sfun}"
             ret["result"] = False
             return ret
 
