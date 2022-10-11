@@ -3099,6 +3099,50 @@ def podman_version(user=None):
     return version
 
 
+def autoupdate(
+    composition,
+    authfile=None,
+    dry_run=False,
+    user=None,
+):
+    """
+    Run ``podman auto-update``. This automatically updates container images
+    and containers that have the "io.containers.autoupdate=<policy>" label.
+
+    .. code-block:: bash
+
+        salt '*' compose.autoupdate gitea
+
+    composition
+        Some reference about where to find the project definitions.
+        Can be an absolute path to the composition definitions (``docker-compose.yml``),
+        the name of a project with available containers or the name
+        of a directory in ``compose.containers_base``.
+
+    authfile
+        Path to the authentication file.
+
+    dry_run
+        Only check for pending updates.
+
+    user
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+    composition = find_compose_file(composition)
+    user = user or _find_user(composition)
+
+    cmd_args = []
+
+    if authfile:
+        cmd_args.append(("authfile", authfile))
+    if dry_run:
+        cmd_args.append("dry-run")
+
+    return _podman("auto-update", cmd_args=cmd_args, runas=user)
+
+
 def _project_to_project_name(project):
     """
     Returns the parent directory name of an absolute path to a composition file
