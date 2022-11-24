@@ -1507,6 +1507,7 @@ def install(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    pod_wants=True,
     enable_units=True,
     now=False,
     pod_prefix=None,
@@ -1589,6 +1590,12 @@ def install(
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
+
+    pod_wants
+        Ensure the pod dependencies for containers are enforced with ``Wants=``
+        instead of ``Requires=``. This fixes issues when restarting a single
+        container that is part of a pod, e.g. when auto-update is run.
+        See https://github.com/containers/podman/issues/14546.
 
     enable_units
         Enable the service units after installation. Defaults to True.
@@ -1688,6 +1695,7 @@ def install(
         ephemeral=ephemeral,
         restart_policy=restart_policy,
         restart_sec=restart_sec,
+        pod_wants=pod_wants,
         stop_timeout=stop_timeout,
         enable_units=enable_units,
         now=now,
@@ -2608,19 +2616,21 @@ def restart(
 
     if units["pods"]:
         restart_services = [list(units["pods"].keys())[0]]
+        # systemctl restart seems to fail for pods
+        systemctl_stop(restart_services[0], user)
+        func = systemctl_start
     else:
         restart_services = list(units["containers"].keys())
+        func = systemctl_restart
 
     if not restart_services:
         raise CommandExecutionError(
             f"Could not find any units belonging to project {project_name} for user {user}."
         )
 
-    # @FIXME afaict this does not work as intended for pods.
-    # probably needs to stop all services and then start the pod again
     for service in restart_services:
         _check_for_unit_changes(service, user)
-        systemctl_restart(service, user)
+        func(service, user)
 
     return True
 

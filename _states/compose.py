@@ -207,18 +207,23 @@ def installed(
                 user=user,
             )
 
-            wanted_units = __salt__["compose.install_units"](
-                name,
-                pod_prefix=pod_prefix,
-                container_prefix=container_prefix,
-                separator=separator,
-                user=user,
-                ephemeral=ephemeral,
-                restart_policy=restart_policy,
-                restart_sec=restart_sec,
-                stop_timeout=stop_timeout,
-                generate_only=True,
-            )
+            try:
+                wanted_units = __salt__["compose.install_units"](
+                    name,
+                    pod_prefix=pod_prefix,
+                    container_prefix=container_prefix,
+                    separator=separator,
+                    user=user,
+                    ephemeral=ephemeral,
+                    restart_policy=restart_policy,
+                    restart_sec=restart_sec,
+                    stop_timeout=stop_timeout,
+                    generate_only=True,
+                )
+            except SaltInvocationError as err:
+                if "Could not find existing pod or containers" not in str(err):
+                    raise
+                wanted_units = {}
 
             units_changed = False
 
