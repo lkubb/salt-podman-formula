@@ -399,7 +399,22 @@ def _user_info(user, var=""):
     return val
 
 
-def _service_dir(user=None):
+def service_dir(user=None):
+    """
+    Returns the path of the directory service units should be
+    installed in.
+
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.service_dir gitea
+
+    user
+        The user account to return the service directory for.
+        If unset, defaults to root.
+    """
     if user is None:
         # This module generally assumes Salt is running as root
         return str(Path("/") / "etc" / "systemd" / "system")
@@ -497,7 +512,7 @@ def _untracked_custom_unit_found(name, user=None):
     /etc/systemd/system, return True. Otherwise, return False.
     This function is modified from the official systemd_service module.
     """
-    services = _service_dir(user)
+    services = service_dir(user)
     unit_path = Path(services) / _canonical_unit_name(name)
     return unit_path.exists() and not _check_available(name, user)
 
@@ -1152,11 +1167,11 @@ def _is_unit_installed(service, user):
     Helper for checking if a unit file exists.
     """
 
-    service_dir = Path(_service_dir(user))
-    if not service_dir.exists():
+    sdir = Path(service_dir(user))
+    if not sdir.exists():
         return False, None
 
-    path = service_dir / (_canonical_unit_name(service))
+    path = sdir / (_canonical_unit_name(service))
     return path.exists(), str(path)
 
 
@@ -1351,7 +1366,7 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     """
 
     unit = _canonical_unit_name(unit)
-    unit_file = Path(_service_dir(user)) / unit
+    unit_file = Path(service_dir(user)) / unit
     if not unit_file.exists():
         raise SaltInvocationError(f"File '{unit_file}' does not exist.")
     contents = unit_file.read_text()
@@ -1689,6 +1704,7 @@ def install_units(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    pod_wants=True,
     generate_only=False,
     enable_units=True,
     now=False,
@@ -1735,6 +1751,12 @@ def install_units(
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
+
+    pod_wants
+        Ensure the pod dependencies for containers are enforced with ``Wants=``
+        instead of ``Requires=``. This fixes issues when restarting a single
+        container that is part of a pod, e.g. when auto-update is run.
+        See https://github.com/containers/podman/issues/14546.
 
     generate_only
         Do not install the files, just return the contents.
@@ -1796,8 +1818,7 @@ def install_units(
     if stop_timeout is not None:
         cmd_args.append(("time", stop_timeout))
 
-    # need the definitions for finding the unit names,
-    # so this actually runs twice. @TODO use file.manage_file
+    # need the definitions for finding the unit names
     definitions = {}
     for i in ids:
         out = _podman(
@@ -1810,18 +1831,36 @@ def install_units(
                     f"Your configuration resulted in duplicate unit names ({name})."
                 )
             definitions[name] = unit
+
+    if pod and pod_wants:
+        pod_name = pod[0]["Name"]
+        definitions[pod_name] = re.sub(
+            r"^Requires=", "Wants=", definitions[pod_name], flags=re.MULTILINE
+        )
+
     if generate_only:
         return definitions
 
-    cmd_args.append("files")
-    cwd = Path(_service_dir(user))
-    if not cwd.exists():
-        __salt__["file.mkdir"](str(cwd), user=user)
+    cwd = Path(service_dir(user))
 
-    for i in ids:
-        _podman(
-            "generate systemd", cmd_args=cmd_args, params=[i], runas=user, cwd=str(cwd)
+    for service_name, service_definitions in definitions.items():
+        ret = __salt__["file.manage_file"](
+            cwd / (service_name + ".service"),
+            contents=service_definitions,
+            makedirs=True,
+            user=user,
+            group=__salt__["user.primary_group"](user),
+            mode="0644",
+            sfn=None,
+            source=None,
+            source_sum=None,
+            attrs=None,
+            saltenv=None,
+            backup=False,
+            ret=None,
         )
+        if not ret["result"]:
+            raise CommandExecutionError(ret["comment"])
 
     # This assumes the name can be autodiscovered @FIXME
     # Previously, this was done with calling systemctl directly

@@ -38,6 +38,7 @@ Todo:
 """
 import logging
 import time
+from pathlib import Path
 
 from salt.exceptions import CommandExecutionError, SaltInvocationError
 from salt.utils.args import get_function_argspec as _argspec
@@ -69,6 +70,7 @@ def installed(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    pod_wants=True,
     enable=True,
     pod_prefix=None,
     container_prefix=None,
@@ -150,6 +152,12 @@ def installed(
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
 
+    pod_wants
+        Ensure the pod dependencies for containers are enforced with ``Wants=``
+        instead of ``Requires=``. This fixes issues when restarting a single
+        container that is part of a pod, e.g. when auto-update is run.
+        See https://github.com/containers/podman/issues/14546.
+
     enable
         Enable the service units after installation. Defaults to True.
 
@@ -199,7 +207,32 @@ def installed(
                 user=user,
             )
 
-            if is_installed and not has_changes:
+            wanted_units = __salt__["compose.install_units"](
+                name,
+                pod_prefix=pod_prefix,
+                container_prefix=container_prefix,
+                separator=separator,
+                user=user,
+                ephemeral=ephemeral,
+                restart_policy=restart_policy,
+                restart_sec=restart_sec,
+                stop_timeout=stop_timeout,
+                generate_only=True,
+            )
+
+            units_changed = False
+
+            service_dir = Path(__salt__["compose.service_dir"](user))
+            for unit_name, unit_definitions in wanted_units.items():
+                unit_file = str(service_dir / (unit_name + ".service"))
+                if not __salt__["file.file_exists"](unit_file):
+                    units_changed = True
+                    break
+                if __salt__["file.read"](unit_file) != unit_definitions:
+                    units_changed = True
+                    break
+
+            if is_installed and not has_changes and not units_changed:
                 ret[
                     "comment"
                 ] = f"Composition {name} is already installed and in sync with the definitions."
@@ -216,7 +249,7 @@ def installed(
             ret["changes"]["installed" if not is_installed else "updated"] = name
             return ret
 
-        if is_installed:
+        if has_changes and is_installed:
             # sometimes, podman-compose fails to remove the containers correctly:
             #   podman stop -t 10 container
             #   exit code: 0
@@ -247,7 +280,24 @@ def installed(
                 user=user,
             )
 
-        if __salt__["compose.install"](
+        if units_changed and not has_changes:
+            __salt__["compose.install_units"](
+                name,
+                pod_prefix=pod_prefix,
+                container_prefix=container_prefix,
+                separator=separator,
+                user=user,
+                ephemeral=ephemeral,
+                restart_policy=restart_policy,
+                restart_sec=restart_sec,
+                stop_timeout=stop_timeout,
+                pod_wants=pod_wants,
+                enable_units=enable,
+                now=False,
+            )
+            ret["comment"] = f"Unit files for composition {name} have been updated."
+            ret["changes"]["updated"] = name
+        elif __salt__["compose.install"](
             name,
             project_name=project_name,
             create_pod=create_pod,
@@ -264,6 +314,7 @@ def installed(
             restart_policy=restart_policy,
             restart_sec=restart_sec,
             stop_timeout=stop_timeout,
+            pod_wants=pod_wants,
             enable_units=enable,
             now=False,
             pod_prefix=pod_prefix,
