@@ -7,6 +7,8 @@ podman:
     # Just for testing purposes
     winner: lookup
     added_in_lookup: lookup_value
+    pkg:
+      name: podman
     enablerepo:
       stable: true
     config: '/etc/containers'

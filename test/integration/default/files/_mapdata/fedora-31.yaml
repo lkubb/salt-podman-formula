@@ -8,6 +8,8 @@ values:
   lookup:
     arch: amd64
     rootgroup: root
+    pkg:
+      name: podman
     enablerepo:
       stable: true
     config: '/etc/containers'
