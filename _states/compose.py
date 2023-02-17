@@ -970,21 +970,30 @@ def lingering_managed(name, enable):
             func = __salt__["compose.lingering_disable"]
             verb = "disable"
 
-        if enable == __salt__["compose.lingering_enabled"](name):
+        if __salt__["compose.lingering_enabled"](name) is enable:
             ret["comment"] = f"Lingering for user {name} is already {verb}d."
             return ret
         if __opts__["test"]:
             ret["result"] = None
             ret["comment"] = f"Lingering for user {name} is set to be {verb}d."
             ret["changes"]["lingering"] = enable
-        elif func(name):
-            ret["comment"] = f"Lingering for user {name} has been {verb}d."
-            ret["changes"]["lingering"] = enable
-        else:
+        elif not func(name):
             raise CommandExecutionError(
                 f"Something went wrong while trying to {verb} lingering for user {name}. "
                 "This should not happen."
             )
+
+        start = time.time()
+        # The reporting lags a bit sometimes, which might make other states fail
+        while start - time.time() < 3:
+            if __salt__["compose.lingering_enabled"](name) is enable:
+                ret["comment"] = f"Lingering for user {name} has been {verb}d."
+                ret["changes"]["lingering"] = enable
+                return ret
+            time.sleep(0.1)
+        raise CommandExecutionError(
+            "No errors encountered, but the reported state does not match the expected"
+        )
 
     except (CommandExecutionError, SaltInvocationError) as e:
         ret["result"] = False
