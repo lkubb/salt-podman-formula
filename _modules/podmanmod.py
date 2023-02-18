@@ -574,6 +574,11 @@ def prune_images(user=None):
             res = client.images.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    except TypeError as err:
+        # Workaround a bug in the podman API/library
+        if "'NoneType' object is not iterable" in str(err):
+            return {"ImagesDeleted": [], "SpaceReclaimed": 0}
+        raise
     return res
 
 
