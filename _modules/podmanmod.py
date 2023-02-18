@@ -468,6 +468,60 @@ def network_exists(network, user=None):
     return res
 
 
+def networks(
+    names=None, ids=None, driver=None, label=None, typ=None, plugin=None, user=None
+):
+    """
+    List networks.
+
+    names
+        List of names to filter by.
+
+    ids
+        List of ids to filter by.
+
+    driver
+        Matches a network's driver. Only ``bridge`` is supported.
+
+    label
+        Filter by labels. Format: Either ``key``, ``key=value`` or a list of such.
+
+    typ
+        Filter by network typ. Allowed: ``custom``, ``builtin``.
+
+    plugin
+        Matches CNI plugins included in a network. Allowed: ``bridge``, ``portmap``,
+        ``firewall``, ``tuning``, ``dnsname``, ``macvlan``.
+
+    user
+        List containers for this user account. Requires the Podman
+        socket to run for this user, which usually requires lingering enabled.
+    """
+    filters = {}
+    if names is not None:
+        if not isinstance(names, list):
+            names = [names]
+        filters["names"] = names
+    if ids is not None:
+        if not isinstance(ids, list):
+            ids = [ids]
+        filters["ids"] = ids
+    if driver is not None:
+        filters["driver"] = driver
+    if label is not None:
+        filters["label"] = label
+    if typ is not None:
+        filters["type"] = typ
+    if plugin is not None:
+        filters["plugin"] = plugin
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = [x.attrs for x in client.networks.list(filters=filters)]
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res
+
+
 def pause(container, user=None):
     """
     Pause a running container.
@@ -627,80 +681,7 @@ def prune_volumes(user=None):
     return res
 
 
-def ps(all=False, user=None):  # pylint: disable=redefined-builtin
-    """
-    List containers.
-
-    all
-        If false, only show running containers. Defaults to false.
-
-    user
-        List containers for this user account. Requires the Podman
-        socket to run for this user, which usually requires lingering enabled.
-    """
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.containers.list(all=all)]
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
-
-
-def psn(
-    names=None, ids=None, driver=None, label=None, typ=None, plugin=None, user=None
-):
-    """
-    List networks.
-
-    names
-        List of names to filter by.
-
-    ids
-        List of ids to filter by.
-
-    driver
-        Matches a network's driver. Only ``bridge`` is supported.
-
-    label
-        Filter by labels. Format: Either ``key``, ``key=value`` or a list of such.
-
-    typ
-        Filter by network typ. Allowed: ``custom``, ``builtin``.
-
-    plugin
-        Matches CNI plugins included in a network. Allowed: ``bridge``, ``portmap``,
-        ``firewall``, ``tuning``, ``dnsname``, ``macvlan``.
-
-    user
-        List containers for this user account. Requires the Podman
-        socket to run for this user, which usually requires lingering enabled.
-    """
-    filters = {}
-    if names is not None:
-        if not isinstance(names, list):
-            names = [names]
-        filters["names"] = names
-    if ids is not None:
-        if not isinstance(ids, list):
-            ids = [ids]
-        filters["ids"] = ids
-    if driver is not None:
-        filters["driver"] = driver
-    if label is not None:
-        filters["label"] = label
-    if typ is not None:
-        filters["type"] = typ
-    if plugin is not None:
-        filters["plugin"] = plugin
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.networks.list(filters=filters)]
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
-
-
-def psp(user=None):
+def pods(user=None):
     """
     List pods.
 
@@ -716,49 +697,20 @@ def psp(user=None):
     return res
 
 
-def pss(user=None):
+def ps(all=False, user=None):  # pylint: disable=redefined-builtin
     """
-    List secrets.
+    List containers.
+
+    all
+        If false, only show running containers. Defaults to false.
 
     user
-        List secrets for this user account. Requires the Podman
+        List containers for this user account. Requires the Podman
         socket to run for this user, which usually requires lingering enabled.
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.secrets.list()]
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
-
-
-def psv(driver=None, label=None, name=None, user=None):
-    """
-    List volumes.
-
-    driver
-        Filter listed volumes by their driver.
-
-    label
-        Filter listed volumes by label and/or value [Dict[str, str]].
-
-    name
-        Filter listed volumes by name.
-
-    user
-        List volumes for this user account. Requires the Podman
-        socket to run for this user, which usually requires lingering enabled.
-    """
-    filters = {}
-    if driver is not None:
-        filters["driver"] = driver
-    if label is not None:
-        filters["label"] = label
-    if name is not None:
-        filters["name"] = name
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.volumes.list(filters=filters)]
+            res = [x.attrs for x in client.containers.list(all=all)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res
@@ -791,6 +743,87 @@ def pull(image, tag=None, all_tags=False, platform=None, user=None):
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
             res = client.images.pull(image, tag=tag, all_tags=all_tags, **kwargs)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res or True
+
+
+def remove_network(network, force=False, user=None):
+    """
+    Remove a network.
+
+    network
+        Name of the network to delete.
+
+    force
+        Remove network and any associated containers.
+
+    user
+        Remove a network created under this user account.
+    """
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = client.images.remove(network, force=force)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res or True
+
+
+def remove_pod(pod, force=False, user=None):
+    """
+    Remove a pod.
+
+    pod
+        Name or ID of the pod to delete.
+
+    force
+        Stop and delete all containers in pod before deleting pod.
+
+    user
+        Remove a pod created under this user account.
+    """
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = client.pods.remove(pod, force=force)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res or True
+
+
+def remove_secret(secret, user=None):
+    """
+    Remove a secret.
+
+    secret
+        Name or ID of the secret to delete.
+
+    user
+        Remove a secret created under this user account.
+    """
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = client.secrets.remove(secret)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res or True
+
+
+def remove_volume(volume, force=False, user=None):
+    """
+    Remove a volume.
+
+    volume
+        Name or ID of the volume to delete.
+
+    force
+        Force deletion of in-use volume. Defaults to false.
+
+    user
+        Remove a volume created under this user account.
+    """
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = client.volumes.remove(volume, force=force)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res or True
@@ -888,87 +921,6 @@ def rmi(image, force=False, user=None):
     return res or True
 
 
-def rmn(network, force=False, user=None):
-    """
-    Remove a network.
-
-    network
-        Name of the network to delete.
-
-    force
-        Remove network and any associated containers.
-
-    user
-        Remove a network created under this user account.
-    """
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.images.remove(network, force=force)
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res or True
-
-
-def rmp(pod, force=False, user=None):
-    """
-    Remove a pod.
-
-    pod
-        Name or ID of the pod to delete.
-
-    force
-        Stop and delete all containers in pod before deleting pod.
-
-    user
-        Remove a pod created under this user account.
-    """
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.pods.remove(pod, force=force)
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res or True
-
-
-def rms(secret, user=None):
-    """
-    Remove a secret.
-
-    secret
-        Name or ID of the secret to delete.
-
-    user
-        Remove a secret created under this user account.
-    """
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.secrets.remove(secret)
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res or True
-
-
-def rmv(volume, force=False, user=None):
-    """
-    Remove a volume.
-
-    volume
-        Name or ID of the volume to delete.
-
-    force
-        Force deletion of in-use volume. Defaults to false.
-
-    user
-        Remove a volume created under this user account.
-    """
-    try:
-        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.volumes.remove(volume, force=force)
-    except (APIError, PodmanError) as err:
-        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res or True
-
-
 def run(
     image, command=None, remove=False, stdout=True, stderr=False, user=None, **kwargs
 ):
@@ -1007,6 +959,7 @@ def run(
                 image, command=command, remove=remove, **_filter_kwargs(kwargs)
             )
     except (APIError, PodmanError) as err:
+        # https://github.com/containers/podman-py/issues/231
         if not is_retry and isinstance(err, APIError) and "image not known" in str(err):
             pull(image, user=user)
             return run(
@@ -1042,6 +995,22 @@ def secret_exists(secret, user=None):
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
             res = client.secrets.exists(secret)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res
+
+
+def secrets(user=None):
+    """
+    List secrets.
+
+    user
+        List secrets for this user account. Requires the Podman
+        socket to run for this user, which usually requires lingering enabled.
+    """
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = [x.attrs for x in client.secrets.list()]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res
@@ -1277,6 +1246,38 @@ def volume_exists(volume, user=None):
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
             res = client.volumes.exists(volume)
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res
+
+
+def volumes(driver=None, label=None, name=None, user=None):
+    """
+    List volumes.
+
+    driver
+        Filter listed volumes by their driver.
+
+    label
+        Filter listed volumes by label and/or value [Dict[str, str]].
+
+    name
+        Filter listed volumes by name.
+
+    user
+        List volumes for this user account. Requires the Podman
+        socket to run for this user, which usually requires lingering enabled.
+    """
+    filters = {}
+    if driver is not None:
+        filters["driver"] = driver
+    if label is not None:
+        filters["label"] = label
+    if name is not None:
+        filters["name"] = name
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            res = [x.attrs for x in client.volumes.list(filters=filters)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res
