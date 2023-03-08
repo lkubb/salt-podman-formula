@@ -41,6 +41,8 @@ podman:
       registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
+    containers:
+      base: /opt/containers
     required_pkgs:
       - git
       - python3-pip
@@ -79,6 +81,7 @@ podman:
           - docker.io
       storage: {}
     user: {}
+  containers: {}
   debian_experimental: false
   debian_unstable: false
   install_method: pkg

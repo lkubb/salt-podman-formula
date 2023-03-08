@@ -10,3 +10,4 @@ include:
 {%- if podman.salt_compat or podman.service_enable %}
   - .service
 {%- endif %}
+  - .containers

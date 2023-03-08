@@ -192,7 +192,7 @@ def create_secret(name, data, driver=None, user=None):
         Secret driver to use.
 
     user
-        Create a secretunder this user account. Requires the Podman
+        Create a secret under this user account. Requires the Podman
         socket to run for this user, which usually requires lingering enabled.
     """
     if not isinstance(data, bytes):
@@ -206,10 +206,10 @@ def create_secret(name, data, driver=None, user=None):
             ) from err
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.pods.create(name, data, driver=driver)
+            res = client.secrets.create(name, data, driver=driver)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
+    return res.attrs
 
 
 def create_volume(name, driver=None, driver_opts=None, labels=None, user=None):
@@ -264,6 +264,112 @@ def exists(container, user=None):
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res
+
+
+def generate_systemd(
+    ref,
+    add_env=None,
+    after=None,
+    container_prefix="container",
+    new=False,
+    header=False,
+    pod_prefix="pod",
+    requires=None,
+    restart_policy=None,
+    restart_sec=None,
+    separator="-",
+    start_timeout=None,
+    stop_timeout=None,
+    use_name=False,
+    wants=None,
+    user=None,
+):
+    """
+    Generate a systemd unit for a container or pod.
+
+    ref
+        The container/pod name or ID to generate.
+
+    add_env
+        List of additional environment variables to set in the systemd unit files.
+
+    new
+        Create a new container instead of starting an existing one. Defaults to false.
+
+    restart_policy
+        Systemd restart-policy: ``no``, ``on-success``, ``on-failure``, ``on-abnormal``,
+        ``on-watchdog``, ``on-abort``, ``always``.
+
+        Defaults to ``on-failure`` (Podman API default).
+
+    restart_sec
+        Configures the time to sleep before restarting a service.
+        Defaults to ``0`` (Podman API default).
+
+    start_timeout
+        Start timeout in seconds.
+        Defaults to ``0`` (Podman API default).
+
+    stop_timeout
+        Stop timeout in seconds.
+        Defaults to ``10`` (Podman API default).
+
+    after
+        Systemd ``After`` list for the container or pod.
+
+    requires
+        Systemd ``Requires`` list for the container or pod.
+
+    wants
+        Systemd ``Wants`` list for the container or pod.
+
+    container_prefix
+        Systemd unit name prefix for containers. Defaults to ``container``.
+
+    pod_prefix
+        Systemd unit name prefix for pods. Defaults to ``pod``.
+
+    separator
+        Systemd unit name separator between name/id and prefix. Defaults to ``-``.
+
+    use_name
+        Use container/pod names instead of IDs. Defaults to false.
+
+    header
+        Generate a header including the Podman version and the timestamp.
+        Defaults to false.
+
+    user
+        Call Podman running under this user account.
+    """
+    payload = {}
+    for arg, param in (
+        (add_env, "additionalEnvVariables"),
+        (new, "new"),
+        (restart_policy, "restartPolicy"),
+        (restart_sec, "restartSec"),
+        (start_timeout, "startTimeout"),
+        (stop_timeout, "stopTimeout"),
+        (after, "after"),
+        (requires, "requires"),
+        (wants, "wants"),
+        (container_prefix, "containerPrefix"),
+        (pod_prefix, "podPrefix"),
+        (separator, "separator"),
+        (use_name, "useName"),
+        (header, "noHeader"),
+    ):
+        if arg is not None:
+            payload[param] = arg if param != "noHeader" else not arg
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            response = client.containers.client.get(
+                f"generate/{ref}/systemd", params=payload
+            )
+            response.raise_for_status()
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return response.json()
 
 
 def image_exists(image, user=None):
@@ -887,7 +993,7 @@ def rm(container, volumes=False, force=False, user=None):
         Delete associated volumes as well. Defaults to false.
 
     force
-        Kill a running container before deleting.
+        Kill a running container before deleting. Defaults to false.
 
     user
         Remove a rootless container created under this user account.
