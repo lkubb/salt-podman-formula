@@ -1171,7 +1171,7 @@ def systemd_service_disabled(
                 f"Something went wrong while trying to stop service {name}. This should not happen."
             )
 
-        if not __salt__["compose.systemctl_is_disabled"](
+        if __salt__["compose.systemctl_is_enabled"](
             name,
             user=user,
         ):

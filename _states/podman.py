@@ -72,7 +72,7 @@ def absent(
             return ret
 
         __salt__["podman.rm"](
-            name=name,
+            name,
             volumes=volumes,
             force=force,
             user=user,
@@ -347,7 +347,7 @@ def secret_absent(
             return ret
 
         __salt__["podman.remove_secret"](
-            name=name,
+            name,
             user=user,
         )
         ret["changes"] = {"removed": name}
