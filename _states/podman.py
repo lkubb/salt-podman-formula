@@ -195,7 +195,13 @@ def present(
             ret["changes"] = {"created": name}
             return ret
 
-        __salt__["podman.create"](
+        # some parameters need the patched function currently
+        suffix = ""
+        for param in ("secret_env",):
+            if param in kwargs:
+                suffix = "_patched"
+
+        __salt__[f"podman.create{suffix}"](
             image,
             command=command,
             name=name,

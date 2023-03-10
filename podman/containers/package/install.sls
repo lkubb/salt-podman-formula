@@ -78,15 +78,21 @@ Container {{ cnt_name }} secrets are present:
       - Container {{ cnt_name }} is present
 {%-   endif %}
 
+{%-   set secret_env = {} %}
+{%-   for secret in cnt.get("env_secrets", {}) %}
+{%-     do secret_env.update({secret: secret}) %}
+{%-   endfor %}
+{%-   do secret_env.update(cnt | traverse("create_params:secret_env", {})) %}
+
 Container {{ cnt_name }} is present:
   podman.present:
     - name: {{ cnt_name }}
     - image: {{ cnt.image }}
-{%-   if cnt.get("env_secrets") %}
-    - secret_env: {{ ((cnt.env_secrets | list) + (cnt | traverse("create_params:env_secrets", []))) | json }}
+{%-   if secret_env %}
+    - secret_env: {{ secret_env | json }}
 {%-   endif %}
-{%-   for cparam, cval in cnt.get("create_params", {}) %}
-{%-     if cparam == "secret_env" %}
+{%-   for cparam, cval in cnt | dictsort %}
+{%-     if cparam in ["secret_env", "env_secrets", "name", "image", "generate_params", "user"] %}
 {%-       continue %}
 {%-     endif %}
     - {{ cparam }}: {{ cval | json }}

@@ -19,9 +19,9 @@ from pathlib import Path
 from salt.exceptions import CommandExecutionError
 
 try:
-    from podman.errors import APIError, NotFound, PodmanError
+    from podman.errors import APIError, ImageNotFound, NotFound, PodmanError
 
-    from podman import PodmanClient
+    from podman import PodmanClient, api
 
     HAS_PODMAN = True
 except ImportError:
@@ -87,6 +87,81 @@ def create(image, command=None, name=None, user=None, **kwargs):
             res = client.containers.run(
                 image, command=command, **_filter_kwargs(kwargs)
             )
+    except (APIError, PodmanError) as err:
+        raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
+    return res.attrs
+
+
+def create_patched(image, command=None, name=None, user=None, **kwargs):
+    """
+    Create a container. This handles more arguments which are unsupported
+    as of podman library version 4.4.1. It meddles with internals though.
+
+    image
+        The image to base the container on.
+
+    command
+        Command to run in the container.
+
+    name
+        The name for the container.
+
+    user
+        Create a rootless container under this user account. Requires the Podman
+        socket to run for this user, which usually requires lingering enabled.
+
+    kwargs
+        Keyword arguments that are passed to the ``create`` method of the
+        ContainersManager instance.
+
+        Note that this also supports ``secret_env`` to set environment variables
+        from secrets, which is not supported by the podman library as of v4.4.1.
+
+        https://github.com/containers/podman-py/blob/main/podman/domain/containers_create.py
+    """
+    is_retry = kwargs.pop("_is_retry", False)
+    params = {}
+    for param in ("secret_env",):
+        if param in kwargs:
+            params[param] = kwargs.pop(param)
+    if "environment" in kwargs:
+        if isinstance(kwargs["environment"], dict):
+            kwargs["environment"] = {k: str(v) for k, v in kwargs["environment"].items()}
+        elif isinstance(kwargs["environment"], list):
+            map(str, kwargs["environment"])
+
+    try:
+        with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
+            payload = {"image": image, "command": command, "name": name}
+            payload.update(kwargs)
+            payload = client.containers._render_payload(payload)
+            payload.update(params)
+            payload = api.prepare_body(payload)
+            try:
+                response = client.containers.client.post(
+                    "/containers/create",
+                    headers={"content-type": "application/json"},
+                    data=payload,
+                )
+                response.raise_for_status(not_found=ImageNotFound)
+            except (APIError, ImageNotFound) as err:
+                if isinstance(err, APIError) and "image not known" not in str(err):
+                    raise
+                if is_retry:
+                    raise
+                pull(image, user=user)
+                return create_patched(
+                    image,
+                    command=command,
+                    name=name,
+                    user=user,
+                    _is_retry=True,
+                    **kwargs,
+                )
+
+            container_id = response.json()["Id"]
+            res = client.containers.get(container_id)
+
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res.attrs
