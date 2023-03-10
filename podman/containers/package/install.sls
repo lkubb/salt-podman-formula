@@ -37,14 +37,14 @@ User session for container {{ cnt_name }} is initialized at boot:
 
 Podman API for container {{ cnt_name }} is enabled:
   compose.systemd_service_enabled:
-    - name: podman
+    - name: podman.socket
     - user: {{ cnt_name }}
     - require:
       - User session for container {{ cnt_name }} is initialized at boot
 
 Podman API for container {{ cnt_name }} is available:
   compose.systemd_service_running:
-    - name: podman
+    - name: podman.socket
     - user: {{ cnt_name }}
     - require:
       - Podman API for container {{ cnt_name }} is enabled
