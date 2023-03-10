@@ -79,6 +79,13 @@ podman:
       # mapping of username to the different keys as seen in global
       # If a user does not exist, skips configuration (will not create a user)
     user: {}
+    # This formula can also manage (rootless) containers.
+    # Specify them in a mapping of name to arguments. All parameters to podman.create
+    # are supported. In addition, the following are available:
+    #   * autoupdate: [bool] Ensure the container is automatically updated
+    #   * env_secrets: [dict] Secrets that should be present in the environment.
+    #   * generate_params: [dict] Arguments to podman.generate_systemd
+  containers: {}
     # On Debian, it is possible to install higher versions than 3.0
     # (current stable repo) by enabling unstable/experimental.
     # Version 3.4/4 can be installed that way, although it is
@@ -131,6 +138,8 @@ podman:
       registries: registries.conf
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
+    containers:
+      base: /opt/containers
     enablerepo: alvistack
     required_pkgs:
       - git
