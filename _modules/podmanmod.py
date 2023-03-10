@@ -82,11 +82,34 @@ def create(image, command=None, name=None, user=None, **kwargs):
 
         https://github.com/containers/podman-py/blob/main/podman/domain/containers_create.py
     """
+    is_retry = kwargs.pop("_is_retry", False)
+    if "environment" in kwargs:
+        if isinstance(kwargs["environment"], dict):
+            kwargs["environment"] = {
+                k: str(v) for k, v in kwargs["environment"].items()
+            }
+        elif isinstance(kwargs["environment"], list):
+            map(str, kwargs["environment"])
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.containers.run(
-                image, command=command, **_filter_kwargs(kwargs)
-            )
+            try:
+                res = client.containers.create(
+                    image, command=command, name=name, **_filter_kwargs(kwargs)
+                )
+            except (APIError, ImageNotFound) as err:
+                if isinstance(err, APIError) and "image not known" not in str(err):
+                    raise
+                if is_retry:
+                    raise
+                pull(image, user=user)
+                return create(
+                    image,
+                    command=command,
+                    name=name,
+                    user=user,
+                    _is_retry=True,
+                    **kwargs,
+                )
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     return res.attrs
@@ -126,7 +149,9 @@ def create_patched(image, command=None, name=None, user=None, **kwargs):
             params[param] = kwargs.pop(param)
     if "environment" in kwargs:
         if isinstance(kwargs["environment"], dict):
-            kwargs["environment"] = {k: str(v) for k, v in kwargs["environment"].items()}
+            kwargs["environment"] = {
+                k: str(v) for k, v in kwargs["environment"].items()
+            }
         elif isinstance(kwargs["environment"], list):
             map(str, kwargs["environment"])
 
