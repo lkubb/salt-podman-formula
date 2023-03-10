@@ -954,7 +954,8 @@ def lingering_managed(name, enable):
     ret = {"name": name, "changes": {}, "result": True, "comment": ""}
 
     try:
-        if not __salt__["user.info"](name):
+        user_info = __salt__["user.info"](name)
+        if not user_info:
             if __opts__["test"]:
                 ret["result"] = None
                 ret[
@@ -984,9 +985,10 @@ def lingering_managed(name, enable):
             )
 
         start = time.time()
-        # The reporting lags a bit sometimes, which might make other states fail
-        while start - time.time() < 3:
-            if __salt__["compose.lingering_enabled"](name) is enable:
+        dbus_session_bus = Path(f"/run/user/{user_info['uid']}/bus")
+        # The enabling lags a bit, which might make other states fail
+        while start - time.time() < 10:
+            if dbus_session_bus.exists() is enable:
                 ret["comment"] = f"Lingering for user {name} has been {verb}d."
                 ret["changes"]["lingering"] = enable
                 return ret
