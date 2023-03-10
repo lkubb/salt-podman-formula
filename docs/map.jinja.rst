@@ -474,7 +474,6 @@ Here is an example based on `template-formula/podman/config/file.sls`_:
 
 .. code-block:: sls
 
-    # -*- coding: utf-8 -*-
     # vim: ft=sls
 
     {#- Get the `tplroot` from `tpldir` #}

@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# This inserts the rendered state docs into the readme.
+# Avoids issues with rendering the final readme on Gitea etc.
+sed '/<INSERT_STATES>/{
+  s/<INSERT_STATES>//g
+  r docs/states.rst
+}' docs/_README.rst.tpl > docs/README.rst

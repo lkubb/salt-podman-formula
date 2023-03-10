@@ -15,6 +15,21 @@ sphinx-rtd-theme = "^1.0.0"
 # fulltoc has an issue with recent Sphinx versions ('easily' fixable in the source code though)
 # sphinxcontrib-fulltoc = "^1.2.0"
 
+[tool.slsdoc]
+include_empty = false
+
+[tool.slsdoc.single_renderer]
+header = "Available states"
+description = """\
+The following states are found in this formula:
+
+.. contents::
+   :local:
+"""
+main_heading_char = "-"
+sub_heading_char = "^"
+literal_sub_heading = true
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

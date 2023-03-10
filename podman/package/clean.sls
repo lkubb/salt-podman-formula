@@ -1,8 +1,12 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_config_clean = tplroot ~ '.config.clean' %}
+{#-
+    Removes Podman and possibly podman-compose/docker-compose
+    and has a dependency on `podman.config.clean`_.
+#}
+
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_config_clean = tplroot ~ ".config.clean" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 include:
@@ -14,7 +18,7 @@ include:
   - {{ slsdotpath }}.salt.clean
 {%- endif %}
 
-podman-package-clean-pkg-removed:
+Podman is removed:
   pkg.removed:
     - name: {{ podman.lookup.pkg.name }}
     - require:

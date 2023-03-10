@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 {%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
 
-{%- if "repo" == podman.install_method or podman.salt_compat %}
+{%- if podman.install_method == "repo" or podman.salt_compat %}
 include:
-{%-   if "repo" == podman.install_method %}
+{%-   if podman.install_method == "repo" %}
   - {{ slsdotpath }}.repo
 {%-   endif %}
 {%-   if podman.salt_compat %}
@@ -15,7 +14,7 @@ include:
 {%-   endif %}
 {%- endif %}
 
-{%- if "Debian" == grains.os and "pkg" == podman.install_method %}
+{%- if grains.os == "Debian" and podman.install_method == "pkg" %}
 {%-   if podman.debian_experimental %}
 
 Debian experimental repository is active:
@@ -24,7 +23,7 @@ Debian experimental repository is active:
     - name: deb http://deb.debian.org/debian experimental main contrib non-free
     - file: /etc/apt/sources.list
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 
 Debian experimental repository is pinned to low priority to not install all experimental packages:
   file.managed:
@@ -38,7 +37,7 @@ Debian experimental repository is pinned to low priority to not install all expe
         Pin: release a=experimental
         Pin-Priority: 10
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 {%-   elif podman.debian_unstable %}
 
 Debian unstable repository is active:
@@ -47,7 +46,7 @@ Debian unstable repository is active:
     - name: deb http://deb.debian.org/debian unstable main contrib non-free
     - file: /etc/apt/sources.list
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 
 Debian unstable repository is pinned to low priority to not install all unstable packages:
   file.managed:
@@ -61,25 +60,25 @@ Debian unstable repository is pinned to low priority to not install all unstable
         Pin: release a=unstable
         Pin-Priority: 20
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 {%-   endif %}
 {%- endif %}
 
-{%- if "pkg" == podman.install_method and "Debian" == grains.os and podman.debian_unstable %}
+{%- if podman.install_method == "pkg" and grains.os == "Debian" and podman.debian_unstable %}
 
-podman-package-install-pkg-installed:
+Podman is installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.pkg.unstable }}
 
-{%- elif "repo" == podman.install_method and podman.lookup.enablerepo in podman.lookup.pkg %}
+{%- elif podman.install_method == "repo" and podman.lookup.enablerepo in podman.lookup.pkg %}
 
-podman-package-install-pkg-installed:
+Podman is installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.pkg[podman.lookup.enablerepo] }}
 
 {%-   else %}
 
-podman-package-install-pkg-installed:
+Podman is installed:
   pkg.installed:
     - name: {{ podman.lookup.pkg.name }}
 {%-   endif %}
@@ -98,7 +97,7 @@ Toml python library is installed:
 
 Restart salt minion on installation of toml:
   cmd.run:
-    - name: 'salt-call service.restart salt-minion'
+    - name: salt-call service.restart salt-minion
     - bg: true
     - onchanges:
       - pip: toml
@@ -108,14 +107,14 @@ Podman unit files are installed:
   file.managed:
     - names:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}:
-        - source: {{ files_switch(['podman.service'],
-                                  lookup='Podman service unit file is installed',
+        - source: {{ files_switch(["podman.service"],
+                                  lookup="Podman service unit file is installed",
                                   indent_width=10
                      )
                   }}
       - {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}:
-        - source: {{ files_switch(['podman.socket'],
-                                  lookup='Podman socket unit file is installed',
+        - source: {{ files_switch(["podman.socket"],
+                                  lookup="Podman socket unit file is installed",
                                   indent_width=10
                      )
                   }}
@@ -124,20 +123,12 @@ Podman unit files are installed:
     - user: root
     - group: {{ podman.lookup.rootgroup }}
     - require:
-      - podman-package-install-pkg-installed
+      - Podman is installed
     - context:
         podman: {{ podman | json }}
-{%-   if 'systemctl' | which %}
-  # this executes systemctl daemon-reload
-  module.run:
-    - service.systemctl_reload: []
-    - onchanges:
-      - file: {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}
-      - file: {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}
-{%-   endif %}
 
 {%- if podman.compose.install %}
-{%-   if "docker" == podman.compose.install %}
+{%-   if podman.compose.install == "docker" %}
 
 docker-compose is installed:
   file.managed:
@@ -148,14 +139,14 @@ docker-compose is installed:
     - user: root
     - group: {{ podman.lookup.rootgroup }}
     - require:
-      - podman-package-install-pkg-installed
-{%-   elif "podman" == podman.compose.install %}
+      - Podman is installed
+{%-   elif podman.compose.install == "podman" %}
 
 podman-compose is installed:
   pip.installed:
     - name: {{ podman._compose }}
     - require:
-      - podman-package-install-pkg-installed
+      - Podman is installed
       - Podman required packages are installed
 {%-   endif %}
 {%- endif %}

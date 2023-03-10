@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 include:
   - {{ sls_package_install }}
-
-# https://github.com/saltstack/salt/issues/50624#issuecomment-668495953
 
 Required packages to manage podman are installed:
   pkg.installed:

@@ -1,33 +1,29 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 {%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
 
-{%- if grains['os'] in ['Debian', 'Ubuntu'] %}
+{%- if grains["os"] in ["Debian", "Ubuntu"] %}
 
+# There is no need for python-apt anymore.
 Ensure Podman APT repository can be managed:
   pkg.installed:
     - pkgs:
-      - python3-apt                    # required by Salt
-{%-   if 'Ubuntu' == grains['os'] %}
-      - python-software-properties     # to better support PPA repositories
-{%-   endif %}
-      - gnupg                          # to dearmor the keys
+      - gnupg # to dearmor the keys @TODO this is not required anymore
 {%- endif %}
 
 {%- for reponame, config in podman.lookup.repos.items() %}
 {%-   if reponame == podman.lookup.enablerepo %}
 
-{%-     if 'apt' == podman.lookup.pkg_manager %}
+{%-     if "apt" == podman.lookup.pkg_manager %}
 {%-       set tmpfile = salt["temp.file"]() %}
 
 Podman {{ reponame }} signing key is available:
   file.managed:
     - name: {{ tmpfile }}
-    - source: {{ files_switch([salt['file.basename'](config.keyring.file)],
-                          lookup='Podman ' ~ reponame ~ ' signing key is available')
+    - source: {{ files_switch([salt["file.basename"](config.keyring.file)],
+                          lookup="Podman " ~ reponame ~ " signing key is available")
               }}
       - {{ config.keyring.source }}
 {%-       if config.keyring.source_hash is false %}
@@ -58,13 +54,13 @@ Podman {{ reponame }} signing key is available:
 Podman {{ reponame }} repository is available:
   pkgrepo.managed:
 {%-     for conf, val in config.items() %}
-{%-       if conf != 'keyring' %}
+{%-       if conf != "keyring" %}
     - {{ conf }}: {{ val }}
 {%-       endif %}
 {%-     endfor %}
-{%-     if podman.lookup.pkg_manager in ['dnf', 'yum', 'zypper'] %}
+{%-     if podman.lookup.pkg_manager in ["dnf", "yum", "zypper"] %}
     - enabled: 1
-{%-     elif 'apt' == podman.lookup.pkg_manager %}
+{%-     elif "apt" == podman.lookup.pkg_manager %}
     # This state module is not actually idempotent in many circumstances
     # https://github.com/saltstack/salt/pull/61986
     # workaround for this formula
@@ -73,21 +69,21 @@ Podman {{ reponame }} repository is available:
         path: {{ config.file }}
 {%-     endif %}
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 
 {%-   else %}
 
 Podman {{ reponame }} repository is disabled:
   pkgrepo.absent:
-{%-     for conf in ['name', 'ppa', 'ppa_auth', 'keyid', 'keyid_ppa', 'copr'] %}
+{%-     for conf in ["name", "ppa", "ppa_auth", "keyid", "keyid_ppa", "copr"] %}
 {%-       if conf in config %}
     - {{ conf }}: {{ config[conf] }}
 {%-       endif %}
 {%-     endfor %}
     - require_in:
-      - podman-package-install-pkg-installed
+      - Podman is installed
 
-{%-     if 'apt' == podman.lookup.pkg_manager %}
+{%-     if "apt" == podman.lookup.pkg_manager %}
 
 Podman {{ reponame }} signing key is absent:
   file.absent:

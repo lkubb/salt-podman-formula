@@ -1,14 +1,18 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_service_clean = tplroot ~ '.service.clean' %}
+{#-
+    Removes the Podman configuration and has a
+    dependency on `podman.service.clean`_.
+#}
+
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_service_clean = tplroot ~ ".service.clean" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 include:
   - {{ sls_service_clean }}
 
-podman-config-clean-file-absent:
+Podman configuration is absent:
   file.absent:
     - names:
       - {{ podman.lookup.config | path_join(podman.lookup.config_files.containers) }}

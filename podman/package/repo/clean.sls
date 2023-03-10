@@ -1,15 +1,19 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{#-
+    This state will remove the configured podman repository.
+    This works for apt/dnf/yum/zypper-based distributions only by default.
+#}
+
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 
-{%- if podman.lookup.pkg_manager not in ['apt', 'dnf', 'yum', 'zypper'] %}
-{%-   if salt['state.sls_exists'](slsdotpath ~ '.' ~ podman.lookup.pkg_manager ~ '.clean') %}
+{%- if podman.lookup.pkg_manager not in ["apt", "dnf", "yum", "zypper"] %}
+{%-   if salt["state.sls_exists"](slsdotpath ~ "." ~ podman.lookup.pkg_manager ~ ".clean") %}
 
 include:
-  - {{ slsdotpath ~ '.' ~ podman.lookup.pkg_manager ~ '.clean' }}
+  - {{ slsdotpath ~ "." ~ podman.lookup.pkg_manager ~ ".clean" }}
 {%-   endif %}
 
 {%- else %}
@@ -18,7 +22,7 @@ include:
 
 Podman {{ reponame }} repository is absent:
   pkgrepo.absent:
-{%-   for conf in ['name', 'ppa', 'ppa_auth', 'keyid', 'keyid_ppa', 'copr'] %}
+{%-   for conf in ["name", "ppa", "ppa_auth", "keyid", "keyid_ppa", "copr"] %}
 {%-     if conf in config %}
     - {{ conf }}: {{ config[conf] }}
 {%-     endif %}

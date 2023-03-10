@@ -1,5 +1,11 @@
 # vim: ft=sls
 
+{#-
+    Removes rootless user accounts, configured
+    containers, secrets and the containers' unit files.
+    Has a dependency on `podman.containers.service.clean`_.
+#}
+
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- set sls_service_clean = tplroot ~ ".containers.service.clean" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}

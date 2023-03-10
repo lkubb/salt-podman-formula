@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_package_install = tplroot ~ '.package.install' %}
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_package_install = tplroot ~ ".package.install" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 
 include:
@@ -17,7 +16,7 @@ Podman global mounts configuration is managed:
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
 {%- endif %}
@@ -31,7 +30,7 @@ Podman global storage configuration is managed:
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ podman.config.global.storage | json }}
@@ -44,7 +43,7 @@ Podman global policy configuration is managed:
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ podman.config.global.policy | json }}
@@ -56,7 +55,7 @@ Podman global registry configuration is managed:
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ podman.config.global.registries | json }}
@@ -68,7 +67,7 @@ Podman global container configuration is managed:
     - mode: '0644'
     - user: root
     - group: {{ podman.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ podman.config.global.containers | json }}
@@ -86,7 +85,7 @@ Podman mounts configuration is managed for user {{ username }}:
     - mode: '0644'
     - user: {{ username }}
     - group: {{ primary_group }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
 {%-     endif %}
@@ -100,7 +99,7 @@ Podman policy configuration is managed for user {{ username }}:
     - mode: '0644'
     - user: {{ username }}
     - group: {{ primary_group }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ config.policy | json }}
@@ -116,7 +115,7 @@ Podman {{ scope }} configuration is managed for user {{ username }}:
     - mode: '0644'
     - user: {{ username }}
     - group: {{ primary_group }}
-    - makedirs: True
+    - makedirs: true
     - require:
       - sls: {{ sls_package_install }}
     - dataset: {{ config[scope] | json }}
