@@ -125,4 +125,5 @@ Container {{ cnt_name }} systemd unit is installed:
     - context:
         name: {{ cnt_name }}
         generate_params: {{ cnt.get("generate_params", {}) | json }}
+        user: {{ cnt_name if rootless else "root" }}
 {%- endfor %}

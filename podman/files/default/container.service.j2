@@ -1,1 +1,1 @@
-{{ salt["podman.generate_systemd"](name, header=false, **generate_args) }}
+{{ salt["podman.generate_systemd"](name, header=false, user=user, use_name=true, **generate_params).values() | first }}
