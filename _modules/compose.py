@@ -199,7 +199,7 @@ def _convert_args(args):
 
     for arg in args:
         if isinstance(arg, dict):
-            arg = list(arg.items())[0]
+            arg = next(iter(arg.items()))
         converted.append(arg)
 
     return converted
@@ -2463,9 +2463,9 @@ def disable(
     )
 
     if units["pods"]:
-        disable_services = [list(units["pods"].keys())[0]]
+        disable_services = next(iter(units["pods"]))
     else:
-        disable_services = list(units["containers"].keys())
+        disable_services = list(units["containers"])
 
     if not disable_services:
         raise CommandExecutionError(
@@ -2539,9 +2539,9 @@ def enable(
     )
 
     if units["pods"]:
-        enable_services = [list(units["pods"].keys())[0]]
+        enable_services = next(iter(units["pods"]))
     else:
-        enable_services = list(units["containers"].keys())
+        enable_services = list(units["containers"])
 
     if not enable_services:
         raise CommandExecutionError(
@@ -2615,12 +2615,12 @@ def restart(
     )
 
     if units["pods"]:
-        restart_services = [list(units["pods"].keys())[0]]
+        restart_services = next(iter(units["pods"]))
         # systemctl restart seems to fail for pods
         systemctl_stop(restart_services[0], user)
         func = systemctl_start
     else:
-        restart_services = list(units["containers"].keys())
+        restart_services = list(units["containers"])
         func = systemctl_restart
 
     if not restart_services:
@@ -2695,9 +2695,9 @@ def start(
     )
 
     if units["pods"]:
-        start_services = [list(units["pods"].keys())[0]]
+        start_services = [next(iter(units["pods"]))]
     else:
-        start_services = list(units["containers"].keys())
+        start_services = list(units["containers"])
 
     if not start_services:
         raise CommandExecutionError(
@@ -2771,9 +2771,9 @@ def stop(
     )
 
     if units["pods"]:
-        stop_services = [list(units["pods"].keys())[0]]
+        stop_services = next(iter(units["pods"]))
     else:
-        stop_services = list(units["containers"].keys())
+        stop_services = list(units["containers"])
 
     if not stop_services:
         raise CommandExecutionError(
@@ -2856,9 +2856,9 @@ def is_disabled(
     )
 
     if units["pods"]:
-        disabled_services = [list(units["pods"].keys())[0]]
+        disabled_services = next(iter(units["pods"]))
     else:
-        disabled_services = list(units["containers"].keys())
+        disabled_services = list(units["containers"])
 
     if not disabled_services:
         raise CommandExecutionError(
@@ -2943,9 +2943,9 @@ def is_enabled(
     )
 
     if units["pods"]:
-        enabled_services = [list(units["pods"].keys())[0]]
+        enabled_services = next(iter(units["pods"]))
     else:
-        enabled_services = list(units["containers"].keys())
+        enabled_services = list(units["containers"])
 
     if not enabled_services:
         raise CommandExecutionError(
@@ -3031,7 +3031,7 @@ def is_running(
 
     # need to check all the services, even with pods,
     # since their status does not rely on their containers (?)
-    running_services = list(units["pods"].keys()) + list(units["containers"].keys())
+    running_services = list(units["pods"]) + list(units["containers"])
 
     if not running_services:
         raise CommandExecutionError(
@@ -3119,7 +3119,7 @@ def is_dead(
 
     # need to check all the services, even with pods,
     # since their status does not rely on their containers (?)
-    dead_services = list(units["pods"].keys()) + list(units["containers"].keys())
+    dead_services = list(units["pods"]) + list(units["containers"])
 
     if not dead_services:
         raise CommandExecutionError(
