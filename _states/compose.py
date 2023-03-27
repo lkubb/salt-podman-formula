@@ -70,6 +70,7 @@ def installed(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    service_overrides=None,
     pod_wants=True,
     enable=True,
     pod_prefix=None,
@@ -152,6 +153,11 @@ def installed(
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
 
+    service_overrides
+        Override generation parameters per unit. This should be a dictionary,
+        mapping the service name as specified in the compose file
+        to extra parameters (dict as well).
+
     pod_wants
         Ensure the pod dependencies for containers are enforced with ``Wants=``
         instead of ``Requires=``. This fixes issues when restarting a single
@@ -218,6 +224,8 @@ def installed(
                     restart_policy=restart_policy,
                     restart_sec=restart_sec,
                     stop_timeout=stop_timeout,
+                    service_overrides=service_overrides,
+                    pod_wants=pod_wants,
                     generate_only=True,
                 )
             except SaltInvocationError as err:
@@ -296,6 +304,7 @@ def installed(
                 restart_policy=restart_policy,
                 restart_sec=restart_sec,
                 stop_timeout=stop_timeout,
+                service_overrides=service_overrides,
                 pod_wants=pod_wants,
                 enable_units=enable,
                 now=False,
@@ -319,6 +328,7 @@ def installed(
             restart_policy=restart_policy,
             restart_sec=restart_sec,
             stop_timeout=stop_timeout,
+            service_overrides=service_overrides,
             pod_wants=pod_wants,
             enable_units=enable,
             now=False,

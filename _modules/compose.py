@@ -1507,6 +1507,7 @@ def install(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    service_overrides=None,
     pod_wants=True,
     enable_units=True,
     now=False,
@@ -1590,6 +1591,11 @@ def install(
 
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
+
+    service_overrides
+        Override generation parameters per unit. This should be a dictionary,
+        mapping the service name as specified in the compose file
+        to extra parameters (dict as well).
 
     pod_wants
         Ensure the pod dependencies for containers are enforced with ``Wants=``
@@ -1695,6 +1701,7 @@ def install(
         ephemeral=ephemeral,
         restart_policy=restart_policy,
         restart_sec=restart_sec,
+        service_overrides=service_overrides,
         pod_wants=pod_wants,
         stop_timeout=stop_timeout,
         enable_units=enable_units,
@@ -1712,6 +1719,7 @@ def install_units(
     restart_policy=None,
     restart_sec=None,
     stop_timeout=None,
+    service_overrides=None,
     pod_wants=True,
     generate_only=False,
     enable_units=True,
@@ -1760,6 +1768,11 @@ def install_units(
     stop_timeout
         Unit stop timeout, defaults to 10 [s].
 
+    service_overrides
+        Override generation parameters per unit. This should be a dictionary,
+        mapping the service name as specified in the compose file
+        to extra parameters (dict as well).
+
     pod_wants
         Ensure the pod dependencies for containers are enforced with ``Wants=``
         instead of ``Requires=``. This fixes issues when restarting a single
@@ -1780,6 +1793,7 @@ def install_units(
     project = _project_to_project_name(project)
     container_prefix = container_prefix or default_container_prefix
     pod_prefix = pod_prefix or default_pod_prefix
+    service_overrides = service_overrides or {}
 
     pod = pps(project, user=user)
 
@@ -1787,7 +1801,7 @@ def install_units(
     if pod and pod[0]["InfraId"]:
         ids = [pod[0]["Id"][:12]]
     else:
-        ids = ps(project, id_only=True, user=user)
+        ids = ps(project, user=user)
 
     if not ids:
         raise SaltInvocationError(
@@ -1829,8 +1843,19 @@ def install_units(
     # need the definitions for finding the unit names
     definitions = {}
     for i in ids:
+        extra_cmd_args = []
+        if not isinstance(i, str):
+            service_name = i["Labels"].get("com.docker.compose.service", "")
+            if service_name in service_overrides:
+                extra_cmd_args.extend(list(service_overrides[service_name].items()))
+            i = i["Id"]
+
         out = _podman(
-            "generate systemd", cmd_args=cmd_args, params=[i], runas=user, json=True
+            "generate systemd",
+            cmd_args=cmd_args + extra_cmd_args,
+            params=[i],
+            runas=user,
+            json=True,
         )
 
         for name, unit in out["parsed"].items():
