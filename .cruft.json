@@ -25,8 +25,111 @@
       "subcomponent": "",
       "subcomponent_config": "",
       "git_username": "lkubb",
-      "lookup": {},
-      "settings": {},
+      "lookup": {
+        "compose": {
+          "docker": {
+            "compose_version": "2.6.1",
+            "latest": {
+              "source": "https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64",
+              "hash": "https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256"
+            },
+            "legacy": {
+              "source": "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64",
+              "hash": "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256"
+            },
+            "legacy_versions": [
+              "1",
+              "2",
+              "3",
+              "4.0"
+            ]
+          },
+          "podman": {
+            "legacy_versions": [
+              "1",
+              "2",
+              "3.0"
+            ],
+            "pip": "podman-compose",
+            "pip_legacy": "podman-compose==0.1.11",
+            "repo": "https://github.com/containers/podman-compose"
+          }
+        },
+        "config_files": {
+          "containers": "containers.conf",
+          "mounts": "mounts.conf",
+          "policy": "policy.json",
+          "registries": "registries.conf",
+          "seccomp": "/usr/share/containers/seccomp.json",
+          "storage": "storage.conf"
+        },
+        "containers": {
+          "base": "/opt/containers"
+        },
+        "required_pkgs": [
+          "git",
+          "python3-pip"
+        ],
+        "salt_compat": {
+          "pips": [
+            "docker"
+          ],
+          "pkgs": [
+            "python3-pip"
+          ],
+          "sockets": {
+            "docker": "/var/run/docker.sock",
+            "podman": "/var/run/podman/podman.sock"
+          }
+        },
+        "service": {
+          "name": "podman",
+          "path": "/etc/systemd/system/{name}.service",
+          "socket_path": "/etc/systemd/system/{name}.socket"
+        }
+      },
+      "settings": {
+        "compose": {
+          "install": false,
+          "install_modules": false,
+          "podman_compose_rev": false
+        },
+        "config": {
+          "global": {
+            "containers": {
+              "containers": {},
+              "network": {},
+              "engine": {},
+              "service_destinations": {},
+              "secret": {},
+              "machine": {}
+            },
+            "mounts": [],
+            "policy": {
+              "default": [
+                {
+                  "type": "insecureAcceptAnything"
+                }
+              ]
+            },
+            "registries": {
+              "unqualified-search-registries": [
+                "docker.io"
+              ],
+              "registry": []
+            },
+            "storage": {}
+          },
+          "user": {}
+        },
+        "containers": {},
+        "debian_experimental": false,
+        "debian_unstable": false,
+        "install_method": "pkg",
+        "salt_compat": false,
+        "service_enable": false,
+        "version": "latest"
+      },
       "_template": "https://github.com/lkubb/salt-template-formula"
     }
   },
