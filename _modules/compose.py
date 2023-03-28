@@ -2488,7 +2488,7 @@ def disable(
     )
 
     if units["pods"]:
-        disable_services = next(iter(units["pods"]))
+        disable_services = [next(iter(units["pods"]))]
     else:
         disable_services = list(units["containers"])
 
@@ -2564,7 +2564,7 @@ def enable(
     )
 
     if units["pods"]:
-        enable_services = next(iter(units["pods"]))
+        enable_services = [next(iter(units["pods"]))]
     else:
         enable_services = list(units["containers"])
 
@@ -2640,7 +2640,7 @@ def restart(
     )
 
     if units["pods"]:
-        restart_services = next(iter(units["pods"]))
+        restart_services = [next(iter(units["pods"]))]
         # systemctl restart seems to fail for pods
         systemctl_stop(restart_services[0], user)
         func = systemctl_start
@@ -2796,7 +2796,7 @@ def stop(
     )
 
     if units["pods"]:
-        stop_services = next(iter(units["pods"]))
+        stop_services = [next(iter(units["pods"]))]
     else:
         stop_services = list(units["containers"])
 
@@ -2881,7 +2881,7 @@ def is_disabled(
     )
 
     if units["pods"]:
-        disabled_services = next(iter(units["pods"]))
+        disabled_services = [next(iter(units["pods"]))]
     else:
         disabled_services = list(units["containers"])
 
@@ -2968,7 +2968,7 @@ def is_enabled(
     )
 
     if units["pods"]:
-        enabled_services = next(iter(units["pods"]))
+        enabled_services = [next(iter(units["pods"]))]
     else:
         enabled_services = list(units["containers"])
 
