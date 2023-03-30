@@ -11,18 +11,9 @@
 {%-   set rootless = cnt.get("rootless", True) %}
 
 Container {{ cnt_name }} is dead:
-  compose.systemd_service_dead:
+  user_service.dead:
     - name: {{ cnt_name }}
-{%-   if rootless %}
-    - user: {{ cnt_name }}
-    - onlyif:
-      - fun: user.info
-        name: {{ cnt_name }}
-{%-   endif %}
-
-Container {{ cnt_name }} is disabled:
-  compose.systemd_service_disabled:
-    - name: {{ cnt_name }}
+    - enable: false
 {%-   if rootless %}
     - user: {{ cnt_name }}
     - onlyif:

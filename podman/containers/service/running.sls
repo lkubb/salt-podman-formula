@@ -9,21 +9,13 @@ include:
 
 {%- for cnt_name, cnt in podman.containers.items() %}
 
-Container {{ cnt_name }} is enabled:
-  compose.systemd_service_enabled:
-    - name: {{ cnt_name }}
-{%-   if cnt.get("rootless", True) %}
-    - user: {{ cnt_name }}
-{%-   endif %}
-    - require:
-      - sls: {{ sls_package_install }}
-
 Container {{ cnt_name }} is running:
-  compose.systemd_service_running:
+  user_service.running:
     - name: {{ cnt_name }}
+    - enable: true
 {%-   if cnt.get("rootless", True) %}
     - user: {{ cnt_name }}
 {%-   endif %}
-    - require:
+    - watch:
       - sls: {{ sls_package_install }}
 {%- endfor %}
