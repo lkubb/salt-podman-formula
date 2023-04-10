@@ -22,11 +22,16 @@ podman:
       # they are present.
     install_modules: false
       # Set to true to install from the github repo's latest commit
-      # on the default branch or specify exact git rev to install.
-      # The latest released version is 1.0.3, but 1.0.4 will re-enable
-      # pod creation per docker-compose file.
+      # on the default branch or specify an exact git rev to install.
+      # This switch was introduced because only unreleased versions allowed
+      # the choice of creating a pod per docker-compose file.
+      # Since version 1.0.6 was tagged, this is not required for some configs anymore.
+      # In general, there are  many version differences regarding the pod creation
+      # per docker-compose file. Versions <1 require it, versions 1.0.3/4
+      # do not support it, versions >=1.0.6 allow the choice (but inverted the
+      # semantics in comparison to the the unreleased 1.0.4).
       # https://github.com/containers/podman-compose/issues/442#issuecomment-1062067920
-      # Install from `devel` branch to enable that behavior.
+      # https://github.com/containers/podman-compose/commit/f6dbce36181c44d0d08b6f4ca166508542875ce1
     podman_compose_rev: false
     # Global and user-specific configuration
   config:

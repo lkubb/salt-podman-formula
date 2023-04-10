@@ -1656,14 +1656,23 @@ def install(
     args = [("file", composition), ("project-name", project_name)]
     cmd_args = ["no-start"]
 
-    # pod settings are only available in versions >=1.0.4
+    # pod settings are only available in versions >=1.0.6
+    # (formerly 1.0.4 with --no-pod arg, but only .6 was actually tagged with inverse arg)
     if not pc_pod_support["required"]:
         if create_pod:
+            # in versions where the choice is possible, the default is to not create a pod
             pod_args = _parse_args(_convert_args(pod_args), include_equal=True)
+            if not pc_pod_support["pod_default"]:
+                args.append("in-pod")
             args.append(("pod-args", "'{}'".format(" ".join(pod_args))))
-        else:
-            # in versions where the choice is possible, the default is to create a pod
+        elif pc_pod_support["no_pod_switch"]:
+            # 1.0.4 (unreleased) created a pod by default
             args.append("no-pod")
+        elif pc_pod_support["pod_default"]:
+            # The current latest code does not handle a boolean flag correctly,
+            # we need to pass in a falsey string @FIXME once it has been fixed
+            args.append(("in-pod", "''"))
+
     if podman_create_args:
         parsed_podman_create_args = _parse_args(
             _convert_args(podman_create_args), include_equal=True
@@ -2088,6 +2097,8 @@ def podman_compose_supports_pods(user=None):
 
     # it seems versions 1.0.0 and 1.0.1 are not tagged
     unsupported = ["1.0.2", "1.0.3"]
+    no_pod_switch = ["1.0.4"]
+    pod_default_false = ["1.0.6"]
 
     ret = {"supported": True, "required": False}
 
@@ -2096,6 +2107,9 @@ def podman_compose_supports_pods(user=None):
     elif vers.startswith("1.0") and vers in unsupported:
         ret["required"] = True
         ret["supported"] = False
+    else:
+        ret["no_pod_switch"] = vers in no_pod_switch
+        ret["pod_default"] = vers not in pod_default_false
 
     return ret
 
