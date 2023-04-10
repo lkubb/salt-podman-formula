@@ -1,18 +1,25 @@
-{#- -*- coding: utf-8 -*- #}
 {#- vim: ft=jinja #}
 
-{%- set version = mapdata.version -%}
-{%- if "latest" == version -%}
+{%- set version = {"val": mapdata.version} -%}
+{%- if version.val == "latest" -%}
   {#- if a new repo is configured, this might resolve to the wrong version (or none -> not legacy) -#}
-  {%- set version = salt["pkg.latest_version"](mapdata.lookup.pkg.name) or salt["pkg.version"](mapdata.lookup.pkg.name) or "" -%}
+  {%- do version.update(
+          {"val": (
+              salt["pkg.latest_version"](mapdata.lookup.pkg.name)
+              or salt["pkg.version"](mapdata.lookup.pkg.name)
+              or ""
+            ).split(":", maxsplit=1) | last
+          }
+        )
+  -%}
 {%- endif -%}
 {%- if mapdata.compose.install -%}
-  {%- if "docker" == mapdata.compose.install -%}
+  {%- if mapdata.compose.install == "docker" -%}
     {%- set d = mapdata.lookup.compose.docker -%}
     {#- dumbest possible workaround for scoped variables -#}
     {%- set is_it = {"legacy": false} -%}
     {%- for legacy in d.legacy_versions -%}
-      {%- if version.startswith(legacy) -%}
+      {%- if version.val.startswith(legacy) -%}
         {%- do is_it.update({"legacy": true}) -%}
       {%- endif -%}
     {%- endfor -%}
@@ -22,7 +29,7 @@
               "hash": d.legacy.hash if is_it.legacy else d.latest.hash.format(version=d.compose_version)
             }
     }) -%}
-  {%- elif "podman" == mapdata.compose.install -%}
+  {%- elif mapdata.compose.install == "podman" -%}
     {%- if mapdata.compose.podman_compose_rev %}
       {%- set rev = '' if mapdata.compose.podman_compose_rev is boolean else '@{}'.format(mapdata.compose.podman_compose_rev) %}
       {%- do mapdata.update({"_compose": "git+" ~ mapdata.lookup.compose.podman.repo ~ rev}) -%}
@@ -30,7 +37,7 @@
       {%- set p = mapdata.lookup.compose.podman -%}
       {%- set is_it = {"legacy": false} -%}
       {%- for legacy in p.legacy_versions -%}
-        {%- if version.startswith(legacy) -%}
+        {%- if version.val.startswith(legacy) -%}
           {%- do is_it.update({"legacy": true}) -%}
         {%- endif -%}
       {%- endfor -%}
