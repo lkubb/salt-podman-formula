@@ -33,25 +33,19 @@ values:
         # https://github.com/saltstack/salt/pull/61986
         name: deb [signed-by=/usr/share/keyrings/kubic_deprecated.gpg] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/Debian_{{ grains.osmajorrelease }} /  # yamllint disable-line rule:line-length
         file: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-        keyring:
-          file: /usr/share/keyrings/kubic_deprecated.gpg
-          source: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
-          source_hash: false
+        key_url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
+        aptkey: false
       # this is very unstable, but does not break debian stable ironically
       kubic_unstable:
         humanname: kubic unstable OBS
         name: deb [signed-by=/usr/share/keyrings/kubic_unstable.gpg] http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/Debian_{{ grains.osmajorrelease }} /  # yamllint disable-line rule:line-length
         file: /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list
-        keyring:
-          file: /usr/share/keyrings/kubic_unstable.gpg
-          source: https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
-          source_hash: false
+        key_url: https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
+        aptkey: false
       alvistack:
         humanname: alvistack OBS
         name: deb [signed-by=/usr/share/keyrings/alvistack.gpg] http://downloadcontent.opensuse.org/repositories/home:/alvistack/Debian_{{ grains.osmajorrelease }} /  # yamllint disable-line rule:line-length
         file: /etc/apt/sources.list.d/home:alvistack.list
-        keyring:
-          file: /usr/share/keyrings/alvistack.gpg
-          source: https://downloadcontent.opensuse.org/repositories/home:alvistack/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
-          source_hash: false
+        key_url: https://downloadcontent.opensuse.org/repositories/home:alvistack/Debian_{{ grains.osmajorrelease }}/Release.key  # yamllint disable-line rule:line-length
+        aptkey: false
 ...
