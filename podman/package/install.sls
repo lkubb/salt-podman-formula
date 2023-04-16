@@ -157,5 +157,5 @@ Custom compose Salt modules are installed:
   saltutil.sync_all:
     - refresh: true
     - unless:
-      - {{ "compose" in salt["saltutil.list_extmods"]().get("states", []) | lower }}
+      - '{{ "compose" in salt["saltutil.list_extmods"]().get("states", []) | lower }}'
 {%- endif %}
