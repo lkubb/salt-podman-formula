@@ -318,7 +318,7 @@ class StateRegistry:
                     # given package.init, package.install and package.clean,
                     # only dump init and clean
                     parent = self.lookup(state_id[:-1], tree=True)
-                    if len(list(x for x, y in parent.items() if not isinstance(y, dict))) and "init" in parent and "clean" in parent:
+                    if len(list(x for x, y in parent.items() if not isinstance(y, dict))) == 3 and "init" in parent and "clean" in parent:
                         continue
                 yield self.states[state_id]
 
