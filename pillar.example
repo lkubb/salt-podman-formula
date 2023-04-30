@@ -44,7 +44,7 @@ podman:
         engine: {}
         machine: {}
         network: {}
-        secret: {}
+        secrets: {}
         service_destinations: {}
         # list of lines in mounts.conf
       mounts: []
@@ -78,7 +78,13 @@ podman:
           - docker.io
         # Global storage.conf settings
         # https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md
-      storage: {}
+      storage:
+        storage:
+          driver: overlay
+          graphroot: /var/lib/containers/storage
+          options:
+            additionalimagestores: []
+          runroot: /run/containers/storage
       # User-specific configuration in $XDG_CONFIG_HOME/containers.
       # mapping of username to the different keys as seen in global
       # If a user does not exist, skips configuration (will not create a user)

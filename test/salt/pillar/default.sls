@@ -68,7 +68,7 @@ podman:
         engine: {}
         machine: {}
         network: {}
-        secret: {}
+        secrets: {}
         service_destinations: {}
       mounts: []
       policy:
@@ -78,7 +78,13 @@ podman:
         registry: []
         unqualified-search-registries:
           - docker.io
-      storage: {}
+      storage:
+        storage:
+          driver: overlay
+          graphroot: /var/lib/containers/storage
+          options:
+            additionalimagestores: []
+          runroot: /run/containers/storage
     user: {}
   containers: {}
   debian_experimental: false

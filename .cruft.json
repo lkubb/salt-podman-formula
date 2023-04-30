@@ -101,7 +101,7 @@
               "network": {},
               "engine": {},
               "service_destinations": {},
-              "secret": {},
+              "secrets": {},
               "machine": {}
             },
             "mounts": [],
@@ -118,7 +118,16 @@
               ],
               "registry": []
             },
-            "storage": {}
+            "storage": {
+              "storage": {
+                "driver": "overlay",
+                "graphroot": "/var/lib/containers/storage",
+                "runroot": "/run/containers/storage",
+                "options": {
+                  "additionalimagestores": []
+                }
+              }
+            }
           },
           "user": {}
         },
