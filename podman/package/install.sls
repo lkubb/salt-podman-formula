@@ -88,19 +88,21 @@ Podman required packages are installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.required_pkgs }}
 
-Toml python library is installed:
+Toml and Podman python libraries are installed:
   pip.installed:
-    - name: toml
+    - pkgs:
+      - toml
+      - podman
     - reload_modules: true
     - require:
       - Podman required packages are installed
 
 Restart salt minion on installation of toml:
   cmd.run:
-    - name: salt-call service.restart salt-minion
+    - name: sleep 60; salt-call service.restart salt-minion
     - bg: true
     - onchanges:
-      - pip: toml
+      - Toml and Podman python libraries are installed
 
 # those are installed by the Debian package automatically
 Podman unit files are installed:
