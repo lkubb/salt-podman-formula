@@ -18,7 +18,7 @@ Manage Podman with Salt.
 
 This formula can also install ``docker-compose``/``podman-compose`` and make Podman work with the ``docker`` Salt execution/state module, as far as podman is compatible with the API.
 
-Currently, it is only tested (manually) on Debian 11. Previous Debian releases would take much more effort and are outdated anyways. Other distributions are definitely in scope and will be added at some point.
+Currently, it is only tested (manually) on Debian 11 and Rocky Linux. Previous Debian releases would take much more effort and are outdated anyways. Other distributions are definitely in scope and will be added at some point.
 
 .. contents:: **Table of Contents**
    :depth: 1

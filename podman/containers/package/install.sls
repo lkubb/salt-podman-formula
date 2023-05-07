@@ -108,12 +108,12 @@ Container {{ cnt_name }} is present:
 {%-   endfor %}
 {%-   if rootless %}
     - user: {{ cnt_name }}
+{%-   endif %}
     - require:
-{%-     if rootless %}
+{%-   if rootless %}
       - Podman API for container {{ cnt_name }} is available
-{%-     else %}
+{%-   else %}
       - sls: {{ sls_service_running }}
-{%-     endif %}
 {%-   endif %}
 
 Container {{ cnt_name }} systemd unit is installed:
