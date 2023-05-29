@@ -1715,6 +1715,7 @@ def install(
         stop_timeout=stop_timeout,
         enable_units=enable_units,
         now=now,
+        remove_containers=ephemeral,
     )
 
 
@@ -1733,6 +1734,7 @@ def install_units(
     generate_only=False,
     enable_units=True,
     now=False,
+    remove_containers=False,
 ):
     """
     Install systemd units for a composition.
@@ -1796,6 +1798,11 @@ def install_units(
 
     now
         Start the services after installation. Defaults to False.
+
+    remove_containers
+        Ensure the template containers are removed after generating
+        the service definitions. This is used to workaround an issue
+        regarding ephemeral containers with dependencies. Defaults to false.
     """
 
     user = user or _try_find_user(project)
@@ -1904,6 +1911,15 @@ def install_units(
         if not ret["result"]:
             raise CommandExecutionError(ret["comment"])
 
+    if remove_containers:
+        if pod:
+            ids = ps(project, user=user)
+        cwd = ids[0]["Labels"]["com.docker.compose.project.working_dir"]
+        _podman_compose(
+            "down",
+            runas=user,
+            cwd=cwd,
+        )
     # This assumes the name can be autodiscovered @FIXME
     # Previously, this was done with calling systemctl directly
     if enable_units:
@@ -2050,6 +2066,7 @@ def remove(
     # a better check would be to run inspect_unit and look for AutoRemove @TODO
     containers = ps(
         composition,
+        all=True,
         status=["created", "paused", "stopped", "exited", "unknown"],
         user=user,
     )
