@@ -1,0 +1,108 @@
+{%- macro files_switch(
+      source_files,
+      config,
+      lookup=none,
+      default_files_switch=["id", "os_family"],
+      indent_width=6,
+      use_subpath=false,
+      json=false
+    ) %}
+{#-
+    Renders a list of `salt://` URI for the `source` parameter of a `file.managed`
+    state function. This helps with applying the Template Override and
+    Files Switch (TOFS) pattern.
+
+    Based on `libtofs.jinja`, but homogenized with how `libmapstack` works:
+
+    * Instead of calling `config.get` for configuration parameters to this macro,
+      the configuration is passed in by the caller. This allows setting
+      the values together with the other parameters for `libmapstack.jinja`
+      instead of (unexpectedly) relying on pillar/grains/opts only.
+
+    * Like the `parameters` for `libmapstack`, the name of the switch is prepended
+      to its value. Hence for a Debian minion named `db` with `["id", "os_family"]`, the
+      paths would be:
+        - <path_prefix>/files/id/db (instead of `<path_prefix>/files/db`)
+        - <path_prefix>/files/os_family/Debian (instead of `<path_prefix>/files/Debian`)
+        - <path_prefix>/files/default
+
+    source_files
+        Ordered list of files to check for.
+
+    config
+        Externally merged configuration dict, usually the imported value of `map.jinja`.
+
+    lookup
+        Key under `tofs:source_files` to prepend to the list of source files.
+
+    default_files_switch
+        If `tofs:files_switch` is unset, this is the ordered list of
+        parameters to `config.get` to use as selector switch of the directories under
+        `<path_prefix>/files`.
+
+    indent_width
+        Indentation of the result value to conform to YAML.
+
+    use_subpath
+        Lookup the source file recursively from the including
+        state's directory up to `tplroot`. Defaults to false.
+#}
+{%-   set tplroot = tpldir.split("/")[0] %}
+{%-   set path_prefix = config | traverse("tofs:path_prefix", tplroot) %}
+{%-   set files_dir = config | traverse("tofs:dirs:files", "files") %}
+{%-   set files_switch_list = config | traverse("tofs:files_switch", default_files_switch) %}
+{#-   Lookup source_files (v2), files (v1), or fallback to an empty list #}
+{%-   set src_files = config | traverse("tofs:source_files:" ~ lookup, config | traverse("tofs:files:" ~ lookup, [])) %}
+{#-   Append the default source_files #}
+{%-   set src_files = src_files + source_files %}
+{#-   Only add to [""] when supporting older TOFS implementations #}
+{%-   set path_prefix_exts = [""] %}
+{%-   if use_subpath and tplroot != tpldir %}
+{#-     Walk directory tree to find {{ files_dir }} #}
+{%-     set subpath_parts = tpldir.lstrip(tplroot).lstrip("/").split("/") %}
+{%-     for path in subpath_parts %}
+{%-       set subpath = subpath_parts[0 : loop.index] | join("/") %}
+{%-       do path_prefix_exts.append("/" ~ subpath) %}
+{%-     endfor %}
+{%-   endif %}
+{%-   for path_prefix_ext in path_prefix_exts | reverse %}
+{%-     set path_prefix_inc_ext = path_prefix ~ path_prefix_ext %}
+{#-     For older TOFS implementation, use `files_switch` from the config #}
+{#-     Use the default, new method otherwise #}
+{%-     set fsl = config | traverse(path_prefix_ext | replace("/", ":") ~ ":files_switch", files_switch_list) %}
+{#-     Append an empty value to evaluate as `default` in the loop below #}
+{%-     if "" not in fsl %}
+{%-       set fsl = fsl + [""] %}
+{%-     endif %}
+{%-     for fs in fsl %}
+{%-       for src_file in src_files %}
+{%-         if fs %}
+{%-           set fs_dirs = salt["config.get"](fs, fs) %}
+{%-         else %}
+{%-           set fs_dirs = config | traverse("tofs:dirs:default", "default") %}
+{%-         endif %}
+{#-         Force the `config.get` lookup result as a list where necessary #}
+{#-         since we need to also handle grains that are lists #}
+{%-         if fs_dirs is string %}
+{%-           set fs_dirs = [fs_dirs] %}
+{%-         endif %}
+{%-         for fs_dir in fs_dirs %}
+{#-           strip empty elements by using a select #}
+{%-           set url = (
+                [
+                  "- salt:/",
+                  path_prefix_inc_ext.strip("/"),
+                  files_dir.strip("/"),
+                  fs,
+                  fs_dir.strip("/"),
+                  src_file.strip("/"),
+                ]
+                | select
+                | join("/")
+              ) %}
+{{ url | indent(indent_width, true) }}
+{%-         endfor %}
+{%-       endfor %}
+{%-     endfor %}
+{%-   endfor %}
+{%- endmacro %}

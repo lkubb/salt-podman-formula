@@ -2,7 +2,7 @@
 
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
+{%- from tplroot ~ "/libtofsstack.jinja" import files_switch with context %}
 
 {%- if podman.install_method == "repo" or podman.salt_compat %}
 include:
@@ -109,15 +109,19 @@ Podman unit files are installed:
   file.managed:
     - names:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}:
-        - source: {{ files_switch(["podman.service"],
-                                  lookup="Podman service unit file is installed",
-                                  indent_width=10
+        - source: {{ files_switch(
+                        ["podman.service", ""podman.service".j2"],
+                        config=podman,
+                        lookup="Podman service unit file is installed",
+                        indent_width=10
                      )
                   }}
       - {{ podman.lookup.service.socket_path.format(name=podman.lookup.service.name) }}:
-        - source: {{ files_switch(["podman.socket"],
-                                  lookup="Podman socket unit file is installed",
-                                  indent_width=10
+        - source: {{ files_switch(
+                        ["podman.socket", "podman.socket.j2"],
+                        config=podman,
+                        lookup="Podman socket unit file is installed",
+                        indent_width=10
                      )
                   }}
     - template: jinja

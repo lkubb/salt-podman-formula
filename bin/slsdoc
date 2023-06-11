@@ -19,9 +19,9 @@ ignore = ["_mapdata"]
   # Given a directory with `package.init`, `package.install`
   # and `package.clean`, only dump init and clean.
 avoid_init_dup = True
-  # By default, states are ordered alphabetically, but init
+  # By default, states are ordered according to the top `init.sls`, but init
   # always comes first and all clean states are separated.
-  # This overrides the purely alphabetical order for the roots.
+  # This overrides the order for the roots. Defaults to `"auto"`.
 sort_list = ["init", "clean", "package", "config", "service"]
 
 [tool.slsdoc.single_renderer]
@@ -79,6 +79,7 @@ cut_prefix = true
 include_formula_root = false
 '''
 
+import re
 from pathlib import Path
 
 import toml
@@ -196,7 +197,7 @@ class StateRegistry:
         """
         sort_key = ()
         if a[0] in self.sort_list:
-            sort_key += (str(self.sort_list.index(a[0])),)
+            sort_key += (str(self.sort_list.index(a[0])).zfill(3),)
         else:
             sort_key += (str(len(self.sort_list)),)
         if a[-1] == "init":
@@ -779,9 +780,15 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Invalid value for renderer: {renderer}")
 
+    base = list(base_dir.glob("*/init.sls"))[0].parent
+    sort_list = options.get("sort_list", "auto")
+    if sort_list == "auto":
+        init = (base / "init.sls").read_text()
+        sort_list = ["init", "clean"] + re.findall(r"\n[^\S\n]+\-\ \.(\S+)", re.findall(r"include:((?:\n(?:[^\S\n]+|\{\%.*)\S.*)+)", init)[0])
+
     reg = StateRegistry(
         avoid_init_dup=options.get("avoid_init_dup", True),
-        sort_list=options.get("sort_list"),
+        sort_list=sort_list,
     )
     doc = SaltAutodoc(
         rendr=rend,

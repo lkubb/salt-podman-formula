@@ -1,7 +1,7 @@
 # vim: ft=sls
 
 {%- set tplroot = tpldir.split("/")[0] %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
+{%- from tplroot ~ "/libtofsstack.jinja" import files_switch with context %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
 {%- set sls_config_file = tplroot ~ ".package.install" %}
 {%- set sls_service_running = "" %}
@@ -120,8 +120,9 @@ Container {{ cnt_name }} systemd unit is installed:
   file.managed:
     - name: {{ ((podman.lookup.containers.base | path_join(cnt_name, ".config", "systemd", "user")) if rootless else "/etc/systemd/system")
                  | path_join(cnt_name ~ ".service") }}
-    - source: {{ files_switch(["container.service.j2"],
-                              lookup="Container {{ cnt_name }} systemd unit is installed"
+    - source: {{ files_switch(
+                    [cnt_name ~ ".service.j2", "container.service.j2"],
+                    lookup="Container {{ cnt_name }} systemd unit is installed",
                  )
               }}
     - mode: '0644'
