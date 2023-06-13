@@ -2,7 +2,6 @@
 
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as podman with context %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
 
 {%- for reponame, config in podman.lookup.repos.items() %}
 {%-   if reponame == podman.lookup.enablerepo %}

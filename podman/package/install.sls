@@ -110,7 +110,7 @@ Podman unit files are installed:
     - names:
       - {{ podman.lookup.service.path.format(name=podman.lookup.service.name) }}:
         - source: {{ files_switch(
-                        ["podman.service", ""podman.service".j2"],
+                        ["podman.service", "podman.service.j2"],
                         config=podman,
                         lookup="Podman service unit file is installed",
                         indent_width=10
