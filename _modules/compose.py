@@ -1693,13 +1693,31 @@ def install(
     if pull:
         cmd_args.append("pull")
 
-    _podman_compose(
+    with open(composition, "r") as f:
+        defs = salt.utils.yaml.load(f)
+        if not isinstance(defs, dict):
+            raise SaltInvocationError(
+                f"Compose file at {composition} is malformed, not a dict"
+            )
+
+    out = _podman_compose(
         "up",
         args=args,
         cmd_args=cmd_args,
         runas=user,
         cwd=str(Path(composition).parent),
     )
+
+    present_containers = ps(project_name, status=["created"])
+    wanted_containers = defs.get("services", {})
+
+    if len(present_containers) < len(wanted_containers):
+        # podman-compose does not indicate failure with exit status...
+        raise CommandExecutionError(
+            "Failed to create some service containers.\nPresent: "
+            f"{', '.join(present_containers)}\nWanted: {', '.join(wanted_containers)}"
+            f"\nOutput: {out['stderr']}"
+        )
 
     return install_units(
         project_name,
