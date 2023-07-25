@@ -2010,7 +2010,7 @@ def remove(
 
     .. code-block:: bash
 
-        salt '*' compose.install gitea
+        salt '*' compose.remove gitea
 
     composition
         Some reference about where to find the project definitions.
@@ -2069,6 +2069,8 @@ def remove(
         status=["created", "paused", "stopped", "exited", "unknown"],
         user=user,
     )
+
+    containers += pps(composition, user=user)
 
     if containers or volumes:
         args = [("file", composition), ("project-name", project_name)]
