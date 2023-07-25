@@ -2066,7 +2066,6 @@ def remove(
     # a better check would be to run inspect_unit and look for AutoRemove @TODO
     containers = ps(
         composition,
-        all=True,
         status=["created", "paused", "stopped", "exited", "unknown"],
         user=user,
     )

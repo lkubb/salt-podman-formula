@@ -129,7 +129,7 @@ Container {{ cnt_name }} systemd unit is installed:
     - mode: '0644'
     - user: {{ cnt_name if rootless else "root" }}
     - group: {{ cnt_name if rootless else mariadb.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - template: jinja
     - require:
       - Container {{ cnt_name }} is present
