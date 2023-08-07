@@ -1663,7 +1663,7 @@ def install(
             # in versions where the choice is possible, the default is to not create a pod
             pod_args = _parse_args(_convert_args(pod_args), include_equal=True)
             if not pc_pod_support["pod_default"]:
-                args.append("in-pod")
+                args.append(("in-pod", 1))
             args.append(("pod-args", "'{}'".format(" ".join(pod_args))))
         elif pc_pod_support["no_pod_switch"]:
             # 1.0.4 (unreleased) created a pod by default
