@@ -62,9 +62,14 @@ docker-compose is absent:
   file.absent:
     - name: /usr/local/bin/docker-compose
 {%-   elif "podman" == podman.compose.install %}
+{%-     set pip =
+          salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
+          '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
+%}
 
 podman-compose is absent:
   pip.removed:
     - name: {{ podman.lookup.compose.podman.pip }}
+    - bin_env: {{ pip }}
 {%-   endif %}
 {%- endif %}

@@ -146,11 +146,17 @@ docker-compose is installed:
     - group: {{ podman.lookup.rootgroup }}
     - require:
       - Podman is installed
+
 {%-   elif podman.compose.install == "podman" %}
+{%-     set pip =
+          salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
+          '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
+%}
 
 podman-compose is installed:
   pip.installed:
     - name: {{ podman._compose }}
+    - bin_env: {{ pip }}
     - require:
       - Podman is installed
       - Podman required packages are installed
