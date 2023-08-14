@@ -1712,10 +1712,17 @@ def install(
     wanted_containers = defs.get("services", {})
 
     if len(present_containers) < len(wanted_containers):
+        present_container_names = []
+        for cnt in present_containers:
+            try:
+                present_container_names.append(cnt["Names"][0])
+            except (KeyError, IndexError):
+                present_container_names.append(cnt["Id"])
+
         # podman-compose does not indicate failure with exit status...
         raise CommandExecutionError(
             "Failed to create some service containers.\nPresent: "
-            f"{', '.join(present_containers)}\nWanted: {', '.join(wanted_containers)}"
+            f"{', '.join(present_container_names)}\nWanted: {', '.join(wanted_containers)}"
             f"\nOutput: {out['stderr']}"
         )
 
