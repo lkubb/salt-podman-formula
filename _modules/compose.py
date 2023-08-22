@@ -69,6 +69,28 @@ VALID_UNIT_TYPES = (
     "timer",
 )
 
+PODMAN_RUN_NO_VALUE_PARAMS = (
+    "env-host",
+    "http-proxy",
+    "init",
+    "no-healthcheck",
+    "no-hosts",
+    "oom-kill-disable",
+    "passwd",
+    "privileged",
+    "quiet",
+    "read-only",
+    "read-only-tmpfs",
+    "replace",
+    "rm",
+    "rmi",
+    "rootfs",
+    "sig-proxy",
+    "tls-verify",
+    "tty",
+    "unsetenv-all",
+)
+
 containers_base = "/opt/containers"
 default_to_dirowner = True
 default_pod_prefix = ""
@@ -1389,7 +1411,9 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
             arg = args[cur].lstrip("-")
             val = True
 
-            if cur + 1 < num and not args[cur + 1].startswith("-"):
+            if arg in PODMAN_RUN_NO_VALUE_PARAMS:
+                pass
+            elif cur + 1 < num and not args[cur + 1].startswith("-"):
                 cur += 1
                 val = args[cur]
             elif "=" in arg:
