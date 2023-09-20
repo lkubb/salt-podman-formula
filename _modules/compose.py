@@ -2803,7 +2803,8 @@ def start(
     if units["pods"]:
         start_services = [next(iter(units["pods"]))]
     else:
-        start_services = list(units["containers"])
+        start_services = []
+    start_services += list(units["containers"])
 
     if not start_services:
         raise CommandExecutionError(
@@ -2879,7 +2880,8 @@ def stop(
     if units["pods"]:
         stop_services = [next(iter(units["pods"]))]
     else:
-        stop_services = list(units["containers"])
+        stop_services = []
+    stop_services += list(units["containers"])
 
     if not stop_services:
         raise CommandExecutionError(
