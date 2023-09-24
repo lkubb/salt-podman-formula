@@ -37,6 +37,7 @@ Todo:
     * import/export Kubernetes YAML files
 """
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -1355,3 +1356,400 @@ def mod_watch(name, sfun=None, **kwargs):
     ret["changes"][verb + pp_suffix] = name
 
     return ret
+
+
+def file_copy(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.copy`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.copy``.
+    """
+    return __states__["file.copy"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def file_directory(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.directory`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.directory``.
+    """
+    return __states__["file.directory"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def file_managed(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.managed`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.managed``.
+    """
+    return __states__["file.managed"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def file_recurse(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.recurse`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.recurse``.
+    """
+    return __states__["file.recurse"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def file_serialize(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.serialize`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.serialize``.
+    """
+    return __states__["file.serialize"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def file_symlink(
+    name,
+    project,
+    container_ref=None,
+    fail_kwargs=None,
+    **kwargs,
+):
+    """
+    Wrapper for ``file.symlink`` that allows to manage owners from the perspective
+    of the container. This requires the container to be installed or running
+    and ``user``/``group`` to be set using IDs instead of names (except ``root``,
+    which is mapped to ``0``). If it is not running, only non-remapped IDs,
+    ``userns=keep-id`` or ``uidmap``/``gidmap`` can be resolved.
+
+    name
+        Name of the directory to manage.
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    container_ref
+        Match specific project container by substring in a name.
+        Optional.
+
+    fail_kwargs
+        Instead of failing when a container is not running, update the
+        kwargs with this dictionary and still execute the state call.
+
+    kwargs
+        Other kwargs will be passed through to ``file.symlink``.
+    """
+    return __states__["file.symlink"](
+        name, **_resolve_owner(project, container_ref, fail_kwargs, kwargs)
+    )
+
+
+def _resolve_owner(project, container_ref, fail_kwargs, kwargs):
+    """
+    Helper that resolves ``file`` state module calls with owner
+    parameters to container UID/GID.
+    """
+
+    def check_fail(msg=""):
+        err_msg = msg or (
+            f"Could not find any container with ref '{container_ref}' "
+            f"belonging to project '{project}'"
+        )
+        if fail_kwargs is None:
+            raise CommandExecutionError(err_msg)
+        log.warning(err_msg)
+        kwargs.update(fail_kwargs)
+        return kwargs
+
+    cnt_info = __salt__["compose.inspect"](project, name=container_ref)
+    idmap_host = {"uid": None, "gid": None}
+    if cnt_info:
+        cnt_info = cnt_info[0]
+        cnt_idmap = cnt_info["HostConfig"].get(
+            "IDMappings", {"GidMap": [], "UidMap": []}
+        )
+    else:
+        # This means the container is not running, we can try to
+        # inspect the service units for expected ID remappings
+        units = __salt__["compose.list_installed_units"](project)
+        if not units:
+            return check_fail()
+        userns = ""
+        uidmap_unit = []
+        gidmap_unit = []
+        if units.get("pods"):
+            # If a pod is in use, it will carry the remap defs
+            pod_info = __salt__["compose.inspect_unit"](
+                units["pods"][next(iter(units["pods"]))]
+            )
+            if "userns" in pod_info["options"]:
+                userns = pod_info["options"]["userns"]
+            else:
+                if "uidmap" in pod_info["options"]:
+                    uidmap_unit = pod_info["options"]["uidmap"]
+                if "gidmap" in pod_info["options"]:
+                    gidmap_unit = pod_info["options"]["gidmap"]
+        else:
+            # Otherwise, look through the container unit definitions
+            for cnt in units.get("containers", []):
+                if container_ref is not None and container_ref not in cnt:
+                    continue
+                # `raw` because `inspect_unit` tries to render `podman.ps` output
+                # for containers otherwise
+                cnt_info = __salt__["compose.inspect_unit"](cnt, raw=True)
+                if "userns" in cnt_info["options"]:
+                    userns = cnt_info["options"]["userns"]
+                else:
+                    if "uidmap" in cnt_info["options"]:
+                        uidmap_unit = cnt_info["options"]["uidmap"]
+                    if "gidmap" in cnt_info["options"]:
+                        gidmap_unit = cnt_info["options"]["gidmap"]
+                break
+
+        # Format possibly discovered remap defs as podman inspect would return
+        if uidmap_unit or gidmap_unit:
+            cnt_idmap = {"GidMap": gidmap_unit, "UidMap": uidmap_unit}
+        elif userns.startswith("keep-id"):
+            userns = userns[7:]
+            cnt_user = None
+            cnt_group = None
+            if userns.startswith(":"):
+                for defn in userns.split(","):
+                    param, val = defn.split("=")
+                    if param == "uid":
+                        cnt_user = int(val)
+                    elif param == "gid":
+                        cnt_group = int(val)
+            if cnt_user is None or cnt_group is None:
+                # If uid/gid were not specified, we need to discover the
+                # user's uid/gid to know which ID the user will receive
+                # inside the container
+                project_info = __salt__["compose.project_info"](project)
+                if not project_info["user"]:
+                    return check_fail(
+                        f"Could not determine associated user from project '{project}'"
+                    )
+                user_info = __salt__["user.info"](project_info["user"])
+                cnt_user = cnt_user if cnt_user is not None else user_info["uid"]
+                cnt_group = cnt_group if cnt_group is not None else user_info["gid"]
+            # We need the host maps to discover the number of IDs, save them for later
+            idmap_host["uid"] = SubID.from_str(
+                __salt__["compose.unshare"](project, "cat /proc/self/uid_map")
+            )
+            idmap_host["gid"] = SubID.from_str(
+                __salt__["compose.unshare"](project, "cat /proc/self/gid_map")
+            )
+            # Calculate final internal idmap
+            cnt_idmap = {
+                "GidMap": [
+                    f"0:1:{cnt_group}",
+                    f"{cnt_group}:0:1",
+                    f"{cnt_group+1}:{cnt_group+1}:{idmap_host['gid'].size() - cnt_group}",
+                ],
+                "UidMap": [
+                    f"0:1:{cnt_user}",
+                    f"{cnt_user}:0:1",
+                    f"{cnt_user+1}:{cnt_user+1}:{idmap_host['uid'].size() - cnt_user}",
+                ],
+            }
+        else:
+            # Nothing was overridden (or we don't know about the `userns` value)
+            cnt_idmap = {"GidMap": [], "UidMap": []}
+
+    for ent in ("user", "group"):
+        if ent in kwargs:
+            if kwargs[ent] == "root":
+                wanted_id = 0
+            elif isinstance(kwargs[ent], str):
+                raise SaltInvocationError(
+                    f"Cannot resolve named {ent}s other than 'root' from outside "
+                    f"the container, required: {ent} ID (integer)"
+                )
+            else:
+                wanted_id = kwargs[ent]
+
+            # This accounts for maps other than ``--userns=host``, e.g. ``keep-id``
+            # or custom maps.
+            int_id_map = SubID.from_inspect(cnt_idmap.get(f"{ent[0].upper()}idMap", []))
+            id_map = idmap_host[f"{ent[0]}id"] or SubID.from_str(
+                __salt__["compose.unshare"](project, f"cat /proc/self/{ent[0]}id_map")
+            )
+            eff_id = int_id_map.find_parent_id(wanted_id)
+            log.debug(f"Found effective (internal) {ent} ID: {wanted_id} => {eff_id}")
+            final_id = id_map.find_parent_id(eff_id)
+            log.debug(f"Found final (host) {ent} ID: {eff_id} => {final_id}")
+            kwargs[ent] = final_id
+    return kwargs
+
+
+class SubID:
+    submap = None
+
+    def __init__(self, submap):
+        self.submap = submap
+
+    @staticmethod
+    def from_str(submap):
+        """
+        Create a SubID object from ``uid_map`` or ``gid_map`` output.
+        """
+        return SubID(
+            tuple(
+                tuple(map(int, re.split(r"[\s]+", line.strip())))
+                for line in submap.splitlines()
+                if line
+            )
+        )
+
+    @staticmethod
+    def from_inspect(submap):
+        """
+        Create a SubID object from ``podman inspect`` ``HostConfig:IDMappings:(U/G)idMap``
+        output.
+        """
+        return SubID(tuple(tuple(map(int, line.split(":"))) for line in submap))
+
+    def find_parent_id(self, fid):
+        if not self.submap:
+            return fid
+        for pid_start, parent_start, cnt in self.submap:
+            if fid in range(pid_start, pid_start + cnt):
+                return parent_start + fid - pid_start
+        raise SaltInvocationError("No such ID defined")
+
+    def size(self):
+        largest = 0
+        for _, _, cnt in self.submap:
+            if cnt > largest:
+                largest = cnt
+        return largest

@@ -1367,14 +1367,81 @@ def list_installed_units(
     return {"containers": containers, "pods": pods}
 
 
-def inspect_unit(unit, user=None, podman_ps_if_running=False):
+def inspect(
+    project=None,
+    name=None,
+    cnt_id=None,
+    systemd_unit=None,
+    fmt=None,
+    user=None,
+):
+    """
+    Inspect running podman containers.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.inspect gitea user=gitea
+
+    project
+        Filter containers belonging to this project.
+        Either the absolute path to a composition file or a project name.
+
+    name
+        Filter containers by name. Matches a substring in a name.
+        Can be a list, which will result in a union of the separate matches.
+
+    cnt_id
+        Filter containers by ID.
+        Can be a list, which will result in a union of the separate matches.
+
+    systemd_unit
+        Filter containers by value of PODMAN_SYSTEMD_UNIT.
+        Can be a list, which will result in a union of the separate matches.
+
+    fmt
+        A (Go) format string to return instead of the full information.
+
+    user
+        Inspect containers running under this user account.
+        If ``project`` is defined and can be mapped to a compose file, defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+    if project is not None:
+        project = _project_to_project_name(project)
+        user = user or _try_find_user(project)
+    json = not fmt or fmt == "json"
+    containers = ps(
+        project=project, name=name, cnt_id=cnt_id, systemd_unit=systemd_unit, user=user
+    )
+    ret = []
+    cmd_args = []
+    if fmt:
+        cmd_args.append(("format", fmt))
+    for container in containers:
+        ret.append(
+            _podman(
+                "inspect",
+                cmd_args=cmd_args,
+                params=[container["Id"]],
+                json=json,
+                runas=user,
+            )["parsed" if json else "stdout"][0]
+        )
+    return ret
+
+
+def inspect_unit(unit, user=None, podman_ps_if_running=False, raw=False):
     """
     Tries to parse an installed service file to an output similar to
     ``podman ps``. This is handy when ephemeral containers are used
     and the services are not running.
 
     unit
-        The name of the unit to inspect.
+        The name of the unit to inspect. Also works with absolute
+        paths without requiring ``user``.
 
     user
         The user that runs the unit. Defaults to Salt process user.
@@ -1454,7 +1521,7 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
     )
     if not cnt:
         raise CommandExecutionError(
-            "Failed parsing unit {unit}. Was it created by podman?"
+            f"Failed parsing unit {unit}. Was it created by podman?"
         )
 
     if podman_ps_if_running:
@@ -1463,15 +1530,18 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
             return out
 
     args = parse_arguments(cnt[0])
+    if raw:
+        return args
 
     parsed = {
         # bool(args["options"].get("replace")) not needed
         "AutoRemove": True,
         "Command": [],
+        "Created": None,
         "CreatedAt": "",
+        "ExitCode": None,
         "Exited": None,
         "ExitedAt": None,
-        "ExitCode": None,
         "Id": None,
         "Image": args["params"][0],
         "ImageID": None,
@@ -1493,7 +1563,6 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False):
         "StartedAt": None,
         "State": None,
         "Status": None,
-        "Created": None,
     }
 
     parsed["Labels"]["PODMAN_SYSTEMD_UNIT"] = unit
@@ -3334,6 +3403,40 @@ def autoupdate(
     return _podman("auto-update", cmd_args=cmd_args, runas=user)
 
 
+def unshare(project, cmd, full=False, user=None):
+    """
+    Run a command prefixed with ``podman unshare``, which will run it
+    in the user namespace belonging to the ``podman`` process.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.unshare chown 911:911 $(pwd)/data/config.json
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    cmd
+        The command to run via ``cmd.run_all``.
+
+    full
+        Return the full ret dict of ``cmd.run_all``, not ``stdout`` only.
+        Defaults to false.
+
+    user
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+    project = _project_to_project_name(project)
+    user = user or _try_find_user(project)
+    out = _podman("unshare", params=[cmd], runas=user)
+    if full:
+        return out
+    return out["stdout"]
+
+
 def _project_to_project_name(project):
     """
     Returns the parent directory name of an absolute path to a composition file
@@ -3346,6 +3449,31 @@ def _project_to_project_name(project):
             raise SaltInvocationError(f"Absolute path '{project}' does not exist.")
         return p.parent.name
     return project
+
+
+def project_info(project, user=None):
+    """
+    Return information about a project. This maps a project name to
+    its composition file and user account.
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' compose.project_info gitea
+
+    project
+        Either the absolute path to a composition file or a project name.
+
+    user
+        The user account this composition has been applied to. Defaults to
+        the composition file parent dir owner (depending on ``compose.default_to_dirowner``)
+        or Salt process user. By default, defaults to the parent dir owner.
+    """
+    return {
+        "composition": find_compose_file(project, user=user),
+        "user": user or _try_find_user(project),
+    }
 
 
 def find_compose_file(project, user=None, raise_not_found_error=True):
