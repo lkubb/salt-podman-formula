@@ -14,12 +14,14 @@ Required packages to manage podman are installed:
     - pkgs: {{ podman.lookup.salt_compat.pips | json }}
     - reload_modules: true
 
+{%- if podman.python_install_method == 'pip' %}
 Restart salt minion on installation of docker-py:
   cmd.run:
     - name: 'salt-call service.restart salt-minion'
     - bg: true
     - onchanges:
       - pip: Required packages to manage podman are installed
+{%- endif %}
 
 Podman socket is symlinked to docker socket:
   file.symlink:

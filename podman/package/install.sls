@@ -87,7 +87,11 @@ Podman is installed:
 Podman required packages are installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.required_pkgs }}
+{%- if podman.python_install_method == "pkg" %}
+    - reload_modules: true
+{%- endif %}
 
+{%- if podman.python_install_method == "pip" %}
 Toml and Podman python libraries are installed:
   pip.installed:
     - pkgs:
@@ -103,6 +107,7 @@ Restart salt minion on installation of toml:
     - bg: true
     - onchanges:
       - Toml and Podman python libraries are installed
+{%- endif %}
 
 # those are installed by the Debian package automatically
 Podman unit files are installed:

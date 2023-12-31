@@ -45,16 +45,15 @@ values:
     containers:
       base: /opt/containers
     required_pkgs:
-      - git
-      - python3-pip
+      - python3-podman
+      - python3-toml
     salt_compat:
-      pips:
-        - docker
+      pips: []
       pkgs:
-        - python3-pip
+        - python3-docker
       sockets:
-        docker: /var/run/docker.sock
-        podman: /var/run/podman/podman.sock
+        docker: /run/docker.sock
+        podman: /run/podman/podman.sock
     service:
       name: podman
       path: /etc/systemd/system/{name}.service

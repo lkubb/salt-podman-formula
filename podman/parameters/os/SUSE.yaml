@@ -1,0 +1,15 @@
+---
+values:
+  lookup:
+    required_pkgs:
+      - python3-podman
+      - python3-toml
+    salt_compat:
+      pips: []
+      pkgs:
+        - python3-docker
+      sockets:
+        docker: /run/docker.sock
+        podman: /run/podman/podman.sock
+  python_install_method: pkg
+...
