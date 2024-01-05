@@ -15,11 +15,11 @@ podman:
       docker:
         compose_version: 2.6.1
         latest:
-          hash: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256
-          source: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64
+          hash: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64.sha256  # yamllint disable-line rule:line-length
+          source: https://github.com/docker/compose/releases/download/v{version}/docker-compose-linux-x86_64  # yamllint disable-line rule:line-length
         legacy:
-          hash: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256
-          source: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64
+          hash: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64.sha256  # yamllint disable-line rule:line-length
+          source: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-linux-x86_64  # yamllint disable-line rule:line-length
         legacy_versions:
           - '1'
           - '2'
@@ -90,6 +90,7 @@ podman:
   debian_experimental: false
   debian_unstable: false
   install_method: pkg
+  python_install_method: pip
   salt_compat: false
   service_enable: false
   version: latest

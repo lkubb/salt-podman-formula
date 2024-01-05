@@ -14,7 +14,8 @@ Required packages to manage podman are installed:
     - pkgs: {{ podman.lookup.salt_compat.pips | json }}
     - reload_modules: true
 
-{%- if podman.python_install_method == 'pip' %}
+{%- if podman.python_install_method == "pip" %}
+
 Restart salt minion on installation of docker-py:
   cmd.run:
     - name: 'salt-call service.restart salt-minion'

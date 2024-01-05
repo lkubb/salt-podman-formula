@@ -76,12 +76,12 @@ Podman is installed:
   pkg.installed:
     - pkgs: {{ podman.lookup.pkg[podman.lookup.enablerepo] }}
 
-{%-   else %}
+{%- else %}
 
 Podman is installed:
   pkg.installed:
     - name: {{ podman.lookup.pkg.name }}
-{%-   endif %}
+{%- endif %}
 
 # this installs pip and git, which are required for this formula
 Podman required packages are installed:
@@ -92,6 +92,7 @@ Podman required packages are installed:
 {%- endif %}
 
 {%- if podman.python_install_method == "pip" %}
+
 Toml and Podman python libraries are installed:
   pip.installed:
     - pkgs:

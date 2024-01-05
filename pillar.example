@@ -117,6 +117,11 @@ podman:
     # The service is socket-activated, hence it is only started once
     # it is called.
   service_enable: false
+    # Whether to use `pip.installed` for installing required Python packages.
+    # Anything other than `pip` will skip the pip states, so ensure the packages
+    # are included in lookup:(required_pkgs|salt_compat:pkgs). By default, this
+    # is true for SUSE only.
+  python_install_method: pip
 
   lookup:
     compose:
