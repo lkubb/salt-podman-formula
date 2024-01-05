@@ -13,12 +13,5 @@
 values:
   lookup:
     pkg_manager: zypper
-    repos:
-      stable:
-        humanname: Podman stable
-        name: Podman stable
-        baseurl: https://FIXME/rpm/stable
-        key_url: https://FIXME/key.gpg
-        gpgcheck: 1
-        gpgautoimport: true
+    repos: {}
 ...
