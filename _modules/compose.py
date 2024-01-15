@@ -1508,7 +1508,9 @@ def inspect_unit(unit, user=None, podman_ps_if_running=False, raw=False):
         return ps(name=args["params"][0])
 
     pod = re.findall(
-        r"^ExecStartPre=[a-z\/]+podman pod create(.*)", contents, flags=re.MULTILINE
+        r"^ExecStartPre=[a-z\/]+podman pod create([^\n]*(?:\n+(?!\w+=|[\[#;])[^\n]+)+|[^\n]+)",
+        contents,
+        flags=re.MULTILINE,
     )
     if pod:
         # @TODO better parsing? flags are returned as True (python)
