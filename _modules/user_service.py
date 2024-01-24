@@ -294,7 +294,7 @@ def disable(unit, user=None):
     return True
 
 
-def reload(user=None):
+def daemon_reload(user=None):
     """
     Reloads systemd unit files. This is an extension to the
     official module, which allows executing this for a specific
