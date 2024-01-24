@@ -55,13 +55,10 @@ def absent(
 
     try:
         containers = __salt__["podman.ps"](all=True, user=user)
-        exists = False
         for container in containers:
             if name in container["Names"]:
-                exists = True
                 break
-
-        if not exists:
+        else:
             ret["comment"] = f"A container named `{name}` does not exist"
             return ret
 
@@ -107,17 +104,15 @@ def dead(
 
     try:
         containers = __salt__["podman.ps"](all=True, user=user)
-        exists = False
         state = None
         for container in containers:
             if name in container["Names"]:
-                exists = True
                 state = container["State"]
                 break
-
-        if not exists:
+        else:
             ret["result"] = False
             ret["comment"] = f"A container named `{name}` does not exist"
+            return ret
 
         if state != "running":
             # Other states? @TODO
@@ -179,15 +174,10 @@ def present(
 
     try:
         containers = __salt__["podman.ps"](all=True, user=user)
-        exists = False
         for container in containers:
             if name in container["Names"]:
-                exists = True
-                break
-
-        if exists:
-            ret["comment"] = f"A container named `{name}` is already present"
-            return ret
+                ret["comment"] = f"A container named `{name}` is already present"
+                return ret
 
         if __opts__["test"]:
             ret["result"] = None

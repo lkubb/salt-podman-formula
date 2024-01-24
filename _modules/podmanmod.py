@@ -342,10 +342,9 @@ def df(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.system.df()
+            return client.system.df()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def exists(container, user=None):
@@ -360,10 +359,9 @@ def exists(container, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.containers.exists(container)
+            return client.containers.exists(container)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def generate_systemd(
@@ -484,10 +482,9 @@ def image_exists(image, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.images.exists(image)
+            return client.images.exists(image)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def images(name=None, all=False, user=None):  # pylint: disable=redefined-builtin
@@ -505,10 +502,9 @@ def images(name=None, all=False, user=None):  # pylint: disable=redefined-builti
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.images.list(name=name, all=all)]
+            return [x.attrs for x in client.images.list(name=name, all=all)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def info(user=None):
@@ -520,10 +516,9 @@ def info(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.system.info()
+            return client.system.info()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def inspect(container, user=None):
@@ -639,7 +634,7 @@ def logs(
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
             container = client.containers.get(container)
-            res = container.logs(
+            return container.logs(
                 stdout=stdout,
                 stderr=stderr,
                 timestamps=timestamps,
@@ -653,7 +648,6 @@ def logs(
         ) from err
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def network_exists(network, user=None):
@@ -668,10 +662,9 @@ def network_exists(network, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.networks.exists(network)
+            return client.networks.exists(network)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def networks(
@@ -722,10 +715,9 @@ def networks(
         filters["plugin"] = plugin
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.networks.list(filters=filters)]
+            return [x.attrs for x in client.networks.list(filters=filters)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def pause(container, user=None):
@@ -783,10 +775,9 @@ def ping(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.system.ping()
+            return client.system.ping()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def pod_exists(pod, user=None):
@@ -801,10 +792,9 @@ def pod_exists(pod, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.pods.exists(pod)
+            return client.pods.exists(pod)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def prune(user=None):
@@ -816,10 +806,9 @@ def prune(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.containers.prune()
+            return client.containers.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def prune_images(user=None):
@@ -831,7 +820,7 @@ def prune_images(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.images.prune()
+            return client.images.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
     except TypeError as err:
@@ -839,7 +828,6 @@ def prune_images(user=None):
         if "'NoneType' object is not iterable" in str(err):
             return {"ImagesDeleted": [], "SpaceReclaimed": 0}
         raise
-    return res
 
 
 def prune_networks(user=None):
@@ -851,10 +839,9 @@ def prune_networks(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.networks.prune()
+            return client.networks.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def prune_pods(user=None):
@@ -866,10 +853,9 @@ def prune_pods(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.pods.prune()
+            return client.pods.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def prune_volumes(user=None):
@@ -881,10 +867,9 @@ def prune_volumes(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.volumes.prune()
+            return client.volumes.prune()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def pods(user=None):
@@ -897,10 +882,9 @@ def pods(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.pods.list()]
+            return [x.attrs for x in client.pods.list()]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def ps(all=False, user=None):  # pylint: disable=redefined-builtin
@@ -916,10 +900,9 @@ def ps(all=False, user=None):  # pylint: disable=redefined-builtin
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.containers.list(all=all)]
+            return [x.attrs for x in client.containers.list(all=all)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def pull(image, tag=None, all_tags=False, platform=None, user=None):
@@ -1200,10 +1183,9 @@ def secret_exists(secret, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.secrets.exists(secret)
+            return client.secrets.exists(secret)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def secrets(user=None):
@@ -1216,10 +1198,9 @@ def secrets(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.secrets.list()]
+            return [x.attrs for x in client.secrets.list()]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def start(container, user=None):
@@ -1433,10 +1414,9 @@ def version(user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.system.version()
+            return client.system.version()
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def volume_exists(volume, user=None):
@@ -1451,10 +1431,9 @@ def volume_exists(volume, user=None):
     """
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = client.volumes.exists(volume)
+            return client.volumes.exists(volume)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
 
 
 def volumes(driver=None, label=None, name=None, user=None):
@@ -1483,7 +1462,6 @@ def volumes(driver=None, label=None, name=None, user=None):
         filters["name"] = name
     try:
         with PodmanClient(base_url=_find_podman_sock(user=user)) as client:
-            res = [x.attrs for x in client.volumes.list(filters=filters)]
+            return [x.attrs for x in client.volumes.list(filters=filters)]
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res
