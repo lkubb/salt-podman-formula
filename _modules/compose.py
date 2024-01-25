@@ -124,8 +124,8 @@ def _needs_compose(func):
     def needs_compose(*args, **kwargs):
         if not _which_podman_compose():
             raise SaltInvocationError(
-                "Running this function requires podman_compose library. "
-                "Make sure it is importable by Salt."
+                "Running this function requires podman-compose. "
+                "Make sure it is in your PATH."
             )
         return func(*args, **kwargs)
 
