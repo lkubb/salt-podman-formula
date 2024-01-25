@@ -62,14 +62,28 @@ docker-compose is absent:
   file.absent:
     - name: /usr/local/bin/docker-compose
 {%-   elif "podman" == podman.compose.install %}
-{%-     set pip =
-          salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
-          '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
+{%-     if grains.os_family == "Debian" and (grains.osmajorrelease >=12 or (grains.os == "Ubuntu" and grains.osmajorrelease >=23)) %}
+
+podman-compose is absent:
+  cmd.run:
+    - name: pipx uninstall podman-compose
+    - env:
+        PIPX_HOME: /opt/pipx
+        PIPX_BIN_DIR: /usr/local/bin
+        PIPX_MAN_DIR: /usr/local/share/man
+    - onlyif:
+      - pipx list --short | grep podman-compose
+
+{%-     else %}
+{%-       set pip =
+            salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
+            '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
 %}
 
 podman-compose is absent:
   pip.removed:
     - name: {{ podman.lookup.compose.podman.pip }}
     - bin_env: {{ pip }}
+{%-     endif %}
 {%-   endif %}
 {%- endif %}

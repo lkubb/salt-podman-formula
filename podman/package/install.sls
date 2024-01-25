@@ -154,9 +154,27 @@ docker-compose is installed:
       - Podman is installed
 
 {%-   elif podman.compose.install == "podman" %}
-{%-     set pip =
-          salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
-          '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
+{%-     if grains.os_family == "Debian" and (grains.osmajorrelease >=12 or (grains.os == "Ubuntu" and grains.osmajorrelease >=23)) %}
+{#-       Dirty workaround for the system python being marked as externally managed @TODO migrate most to pipx + update pipx modules #}
+
+pipx is installed:
+  pkg.installed:
+    - name: pipx
+
+podman-compose is installed:
+  cmd.run:
+    - name: pipx install podman-compose
+    - env:
+        PIPX_HOME: /opt/pipx
+        PIPX_BIN_DIR: /usr/local/bin
+        PIPX_MAN_DIR: /usr/local/share/man
+    - unless:
+      - pipx list --short | grep podman-compose
+
+{%-     else %}
+{%-       set pip =
+            salt["cmd.which_bin"](["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"]) or
+            '__slot__:salt:cmd.which_bin(["/bin/pip3", "/usr/bin/pip3", "/bin/pip", "/usr/bin/pip"])'
 %}
 
 podman-compose is installed:
@@ -166,6 +184,7 @@ podman-compose is installed:
     - require:
       - Podman is installed
       - Podman required packages are installed
+{%-     endif %}
 {%-   endif %}
 {%- endif %}
 
