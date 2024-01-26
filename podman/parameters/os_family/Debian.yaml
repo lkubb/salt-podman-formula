@@ -25,6 +25,8 @@ values:
         - podman-netavark
         - slirp4netns
         - uidmap
+      unstable:
+        - podman
     repos:
       # discouraged, this has been discontinued
       kubic_deprecated:
