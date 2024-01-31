@@ -92,6 +92,9 @@ podman:
   install_method: pkg
   python_install_method: pip
   salt_compat: false
+  selinux:
+    boolean:
+      virt_use_samba: null
   service_enable: false
   version: latest
 
