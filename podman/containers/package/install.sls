@@ -84,12 +84,6 @@ Container {{ cnt_name }} secrets are present:
 {%-   endfor %}
 {%-   do secret_env.update(cnt.get("secret_env", {})) %}
 
-{%-   set labels = {} %}
-{%-   if cnt.get("autoupdate") %}
-{%-     do labels.update({"io.containers.autoupdate": "registry"}) %}
-{%-   endif %}
-{%-   do labels.update(cnt.get("labels", {})) %}
-
 Container {{ cnt_name }} is present:
   podman.present:
     - name: {{ cnt_name }}
@@ -97,11 +91,8 @@ Container {{ cnt_name }} is present:
 {%-   if secret_env %}
     - secret_env: {{ secret_env | json }}
 {%-   endif %}
-{%-   if labels %}
-    - labels: {{ labels | json }}
-{%-   endif %}
 {%-   for cparam, cval in cnt | dictsort %}
-{%-     if cparam in ["autoupdate", "env_secrets", "generate_params", "image", "labels", "name", "secret_env", "user"] %}
+{%-     if cparam in ["autoupdate", "env_secrets", "generate_params", "image", "name", "secret_env", "user"] %}
 {%-       continue %}
 {%-     endif %}
     - {{ cparam }}: {{ cval | json }}
@@ -137,14 +128,4 @@ Container {{ cnt_name }} systemd unit is installed:
         name: {{ cnt_name }}
         generate_params: {{ cnt.get("generate_params", {}) | json }}
         user: {{ cnt_name if rootless else "root" }}
-
-{%-   if rootless %}
-
-Podman autoupdate service is managed for {{ cnt_name }}:
-  compose.systemd_service_{{ "enabled" if cnt.get("autoupdate") else "disabled" }}:
-    - user: {{ cnt_name }}
-    - name: podman-auto-update.timer
-    - require:
-      - Container {{ cnt_name }} is present
-{%-   endif %}
 {%- endfor %}

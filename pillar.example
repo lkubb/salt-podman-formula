@@ -92,9 +92,11 @@ podman:
     # This formula can also manage (rootless) containers.
     # Specify them in a mapping of name to arguments. All parameters to podman.create
     # are supported. In addition, the following are available:
-    #   * autoupdate: [bool] Ensure the container is automatically updated
     #   * env_secrets: [dict] Secrets that should be present in the environment.
     #   * generate_params: [dict] Arguments to podman.generate_systemd
+    #     (Note that `new` does not work with containers created through the API,
+    #      which also means autoupdates will not work. For context, see
+    #      https://github.com/containers/podman/issues/19688)
   containers: {}
     # On Debian, it is possible to install higher versions than 3.0
     # (current stable repo) by enabling unstable/experimental.
