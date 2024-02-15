@@ -219,13 +219,25 @@ def present(
                 suffix = "_patched"
 
         if curr is not None:
-            __salt__["podman.stop"](curr["Id"], user=user)
-            # In case a subsequent operation fails, at least report
-            # on the partial changes. This will be replaced by changes
-            # if everything works out.
-            ret["changes"]["stopped"] = name
-            __salt__["podman.rm"](curr["Id"], user=user)
-            ret["changes"]["removed"] = name
+            if "PODMAN_SYSTEMD_UNIT" in curr["Labels"]:
+                try:
+                    __salt__["user_service.stop"](
+                        curr["Labels"]["PODMAN_SYSTEMD_UNIT"], user=user
+                    )
+                    ret["changes"]["stopped"] = name
+                except CommandExecutionError as err:
+                    log.info(str(err))
+                if __salt__["podman.exists"](curr["Id"], user=user):
+                    __salt__["podman.rm"](curr["Id"], user=user)
+                    ret["changes"]["removed"] = name
+            else:
+                __salt__["podman.stop"](curr["Id"], user=user)
+                # In case a subsequent operation fails, at least report
+                # on the partial changes. This will be replaced by changes
+                # if everything works out.
+                ret["changes"]["stopped"] = name
+                __salt__["podman.rm"](curr["Id"], user=user)
+                ret["changes"]["removed"] = name
 
         __salt__[f"podman.create{suffix}"](
             image,

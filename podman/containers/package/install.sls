@@ -84,15 +84,19 @@ Container {{ cnt_name }} secrets are present:
 {%-   endfor %}
 {%-   do secret_env.update(cnt.get("secret_env", {})) %}
 
+{%-   set labels = {"PODMAN_SYSTEMD_UNIT": cnt_name} %}
+{%-   do labels.update(cnt.get("labels", {})) %}
+
 Container {{ cnt_name }} is present:
   podman.present:
     - name: {{ cnt_name }}
     - image: {{ cnt.image }}
+    - labels: {{ labels | json }}
 {%-   if secret_env %}
     - secret_env: {{ secret_env | json }}
 {%-   endif %}
 {%-   for cparam, cval in cnt | dictsort %}
-{%-     if cparam in ["autoupdate", "env_secrets", "generate_params", "image", "name", "secret_env", "user"] %}
+{%-     if cparam in ["autoupdate", "env_secrets", "generate_params", "image", "labels", "name", "secret_env", "user"] %}
 {%-       continue %}
 {%-     endif %}
     - {{ cparam }}: {{ cval | json }}
@@ -128,4 +132,11 @@ Container {{ cnt_name }} systemd unit is installed:
         name: {{ cnt_name }}
         generate_params: {{ cnt.get("generate_params", {}) | json }}
         user: {{ cnt_name if rootless else "root" }}
+{%-   if rootless %}
+  module.run:
+    - user_service.daemon_reload:
+        - user: {{ cnt_name }}
+    - onchanges:
+      - file: {{ podman.lookup.containers.base | path_join(cnt_name, ".config", "systemd", "user", cnt_name ~ ".service") }}
+{%-   endif %}
 {%- endfor %}
