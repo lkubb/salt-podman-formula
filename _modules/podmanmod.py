@@ -934,7 +934,7 @@ def pull(image, tag=None, all_tags=False, platform=None, user=None):
             res = client.images.pull(image, tag=tag, all_tags=all_tags, **kwargs)
     except (APIError, PodmanError) as err:
         raise CommandExecutionError(f"{type(err).__name__}: {err}") from err
-    return res.attrs["Labels"]
+    return res.attrs
 
 
 def remove_network(network, force=False, user=None):

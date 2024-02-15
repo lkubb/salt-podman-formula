@@ -144,6 +144,7 @@ def present(
     name,
     image,
     command=None,
+    pull=False,
     user=None,
     **kwargs,
 ):
@@ -160,6 +161,10 @@ def present(
     command
         Command to run in the container.
 
+    pull
+        If the container is present, still pull the image and recreate it
+        on changes. Defaults to false.
+
     user
         Create a rootless container under this user account. Requires the Podman
         socket to run for this user, which usually requires lingering enabled.
@@ -170,19 +175,41 @@ def present(
 
         https://github.com/containers/podman-py/blob/main/podman/domain/containers_create.py
     """
-    ret = {"name": name, "changes": {}, "result": True, "comment": ""}
+    ret = {
+        "name": name,
+        "changes": {},
+        "result": True,
+        "comment": f"A container named `{name}` is already present",
+    }
 
     try:
         containers = __salt__["podman.ps"](all=True, user=user)
+        curr = None
+        verb = "create"
+        changes = {}
         for container in containers:
             if name in container["Names"]:
-                ret["comment"] = f"A container named `{name}` is already present"
-                return ret
+                curr = container
+                break
+        else:
+            changes["created"] = name
+
+        if curr is not None:
+            if pull:
+                new_img = __salt__["podman.pull"](image, user=user)
+                if new_img["Id"] != curr["ImageID"]:
+                    changes["ImageId"] = {"old": curr["ImageID"], "new": new_img["Id"]}
+
+        if not changes:
+            return ret
+        if curr is not None:
+            verb = "replace"
+            changes["replaced"] = name
 
         if __opts__["test"]:
             ret["result"] = None
-            ret["comment"] = "Would have created the container"
-            ret["changes"] = {"created": name}
+            ret["comment"] = f"Would have {verb}d the container"
+            ret["changes"] = changes
             return ret
 
         # some parameters need the patched function currently
@@ -191,6 +218,15 @@ def present(
             if param in kwargs:
                 suffix = "_patched"
 
+        if curr is not None:
+            __salt__["podman.stop"](curr["Id"], user=user)
+            # In case a subsequent operation fails, at least report
+            # on the partial changes. This will be replaced by changes
+            # if everything works out.
+            ret["changes"]["stopped"] = name
+            __salt__["podman.rm"](curr["Id"], user=user)
+            ret["changes"]["removed"] = name
+
         __salt__[f"podman.create{suffix}"](
             image,
             command=command,
@@ -198,7 +234,7 @@ def present(
             user=user,
             **kwargs,
         )
-        ret["changes"] = {"created": name}
+        ret["changes"] = changes
 
     except CommandExecutionError as err:
         ret["result"] = False

@@ -91,7 +91,7 @@ podman:
     user: {}
     # This formula can also manage (rootless) containers.
     # Specify them in a mapping of name to arguments. All parameters to podman.create
-    # are supported. In addition, the following are available:
+    # and podman.present are supported. In addition, the following are available:
     #   * env_secrets: [dict] Secrets that should be present in the environment.
     #   * generate_params: [dict] Arguments to podman.generate_systemd
     #     (Note that `new` does not work with containers created through the API,
