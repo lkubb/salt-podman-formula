@@ -2,7 +2,6 @@
 
 {#- Get the `tplroot` from `tpldir` #}
 {%- set tplroot = tpldir.split("/")[0] %}
-{%- from tplroot ~ "/libsaltcli.jinja" import cli with context %}
 
 {%- set query_map = {
       "C": "config.get",
@@ -161,7 +160,7 @@
 {%-     endif %}
 
 {#-     Add `merge:` option to `salt["config.get"]` if configured #}
-{%-     if cli not in ["ssh", "unknown"] and parsed.query_method == "config.get" and config_get_strategy %}
+{%-     if parsed.query_method == "config.get" and config_get_strategy %}
 {%-       set query_opts = {
             "merge": config_get_strategy,
             "delimiter": parsed.query_delimiter,
@@ -174,14 +173,6 @@
             ~ "'"
           ) %}
 {%-     else %}
-{%-       if cli in ["ssh", "unknown"] %}
-{%-         do salt["log.warning"](
-              log_prefix
-              ~ "the 'delimiter' and 'merge' options of 'config.get' are skipped when the salt command type is '"
-              ~ cli
-              ~ "'"
-            ) %}
-{%-       endif %}
 {%-       set query_opts = {} %}
 {%-       set query_opts_msg = "" %}
 {%-     endif %}
