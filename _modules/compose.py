@@ -3356,7 +3356,7 @@ def podman_version(user=None):
     out = _podman("--version", runas=user, raise_error=False)
     if out["retcode"]:
         return False
-    _version = re.findall(r"[0-9\.]+$", out["stdout"])[0]
+    _version = re.findall(r"[0-9\.]+", out["stdout"])[0]
 
     return _version
 
