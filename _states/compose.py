@@ -93,7 +93,8 @@ def installed(
     update
         If the definitions have changed, also update the services.
         This does not affect the images (they are not pulled automatically)
-        and is unaffected by changes outside of the compose file (e.g. env_files).
+        and is unaffected by changes outside of the compose file
+        (e.g. env_file, unless podman-compose is installed via salt-pip).
         Defaults to True.
 
     project_name

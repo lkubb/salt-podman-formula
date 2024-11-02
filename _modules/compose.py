@@ -1021,6 +1021,27 @@ def has_changes(
 
     new_hash, definitions = _get_compose_hash(composition)
 
+    try:
+        import podman_compose
+
+        HAS_PODMAN_COMPOSE = True
+    except ImportError:
+        HAS_PODMAN_COMPOSE = False
+
+    def _get_env_vars(compose_yaml, service_name):
+        info = inspect(compose_yaml, systemd_unit=service_name)
+        if info:
+            env = info[0]["Config"]["Env"]
+        else:
+            env = inspect_unit(service_name, user=user, raw=True)["options"].get(
+                "e", []
+            )
+        env_vars = {}
+        for env_var in env:
+            param, val = env_var.split("=", maxsplit=1)
+            env_vars[param] = val
+        return env_vars
+
     for cnt in containers:
         config_hash = cnt["Labels"].get("io.podman.compose.config-hash")
 
@@ -1039,6 +1060,50 @@ def has_changes(
                 ret["changed"].append(
                     cnt["Labels"].get("PODMAN_SYSTEMD_UNIT", cnt["Id"])
                 )
+                continue
+
+        # env_file content changes are not reflected in the hash, but
+        # as of podman-compose v1.2.0, the containers are created with their contents
+        # (because of https://github.com/containers/podman-compose/pull/949)
+        if (
+            not HAS_PODMAN_COMPOSE
+            or "PODMAN_SYSTEMD_UNIT" not in cnt["Labels"]
+            or not (
+                env_files := definitions.get("services", {})
+                .get(cnt["Labels"]["com.docker.compose.service"], {})
+                .get("env_file")
+            )
+        ):
+            continue
+        if (
+            "env-file"
+            in inspect_unit(cnt["Labels"]["PODMAN_SYSTEMD_UNIT"], user=user, raw=True)[
+                "options"
+            ]
+        ):
+            # podman-compose <1.2.0
+            continue
+        if not isinstance(env_files, list):
+            env_files = [env_files]
+        actual_env = _get_env_vars(
+            cnt["Labels"]["com.docker.compose.project.config_files"],
+            cnt["Labels"]["PODMAN_SYSTEMD_UNIT"],
+        )
+        wanted_env = {}
+        for env_file in env_files:
+            wanted_env.update(**podman_compose.dotenv_to_dict(env_file))
+        wanted_env.update(
+            definitions.get("services", {})
+            .get(cnt["Labels"]["com.docker.compose.service"], {})
+            .get("environment", {})
+        )
+        for wanted_param, wanted_val in wanted_env.items():
+            if wanted_param not in actual_env or actual_env[wanted_param] != wanted_val:
+                log.debug(
+                    f"Changed environment variable '{wanted_param}' in '{cnt['Labels']['PODMAN_SYSTEMD_UNIT']}"
+                )
+                ret["changed"].append(cnt["Labels"]["PODMAN_SYSTEMD_UNIT"])
+                break
 
     # This currently does not check for changes in pod service files @TODO
 
