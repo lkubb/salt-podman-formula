@@ -64,7 +64,8 @@ repos:
         exclude: |
           (?x)^(
                 kitchen.vagrant.yml|
-                test/.*/states/.*\.sls
+                test/.*/states/.*\.sls|
+                .copier-answers.yml
           )$
   - repo: https://github.com/warpnet/salt-lint
     rev: v0.9.2
