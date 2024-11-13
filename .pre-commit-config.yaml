@@ -1,35 +1,6 @@
 # vim: ft=yaml
 ---
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
-ci:
-  autofix_commit_msg: |
-    ci(pre-commit.ci): apply auto fixes from pre-commit.com hooks
-
-    For more information, see https://pre-commit.ci
-  autofix_prs: true
-  autoupdate_branch: ''
-  autoupdate_commit_msg: |
-    ci(pre-commit.ci): perform `pre-commit` autoupdate
-  autoupdate_schedule: quarterly
-  skip: []
-  submodules: false
-default_stages: [commit]
 repos:
-  - repo: https://github.com/dafyddj/commitlint-pre-commit-hook
-    rev: v2.3.0
-    hooks:
-      - id: commitlint
-        name: Check commit message using commitlint
-        description: Lint commit message against @commitlint/config-conventional rules
-        stages: [commit-msg]
-        additional_dependencies: ['@commitlint/config-conventional@17.1.0']
-  - repo: https://github.com/rubocop-hq/rubocop
-    rev: v1.57.0
-    hooks:
-      - id: rubocop
-        name: Check Ruby files with rubocop
-        args: [--debug]
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.6
     hooks:
@@ -59,13 +30,10 @@ repos:
                 \.salt-lint|
                 \.yamllint|
                 .*\.example|
-                test/.*\.sls
           )$
         exclude: |
           (?x)^(
-                kitchen.vagrant.yml|
-                test/.*/states/.*\.sls|
-                .copier-answers.yml
+                .copier-answers.yml|
           )$
   - repo: https://github.com/warpnet/salt-lint
     rev: v0.9.2

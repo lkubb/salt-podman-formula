@@ -1,14 +1,9 @@
 {#- vim: ft=jinja #}
 
-{#- Get the `tplroot` from `tpldir` #}
 {%- set tplroot = tpldir.split("/")[0] %}
-{%- from tplroot ~ "/libmapstack.jinja" import mapstack with context %}
-
-{#- Where to lookup parameters source files #}
 {%- set formula_param_dir = tplroot ~ "/parameters" %}
 
-{#- List of sources to lookup for parameters #}
-{#- Fallback to previously used grains plus minion `id` #}
+{#- Default parameter sources if not specified in map_jinja.yaml #}
 {%- set map_sources = [
       "Y:G@osarch",
       "Y:G@os_family",
@@ -16,49 +11,72 @@
       "Y:G@osfinger",
       "C@" ~ tplroot,
       "Y:G@id",
-    ] %}
+    ]
+%}
 
-{%- set _map_settings = mapstack(
-      matchers=["map_jinja.yaml"],
-      defaults={
-        "values": {"sources": map_sources}
-      },
-      log_prefix="map.jinja configuration: ",
-    )
-    | load_yaml %}
+{#- Search base paths for parameter YAML files (only with `saltext-formula`: if not specified in map_jinja.yaml) #}
+{%- set parameter_dirs = [
+      formula_param_dir,
+    ]
+%}
 
-{%- set map_sources = _map_settings | traverse("values:sources") %}
-{%- do salt["log.debug"](
-      "map.jinja: load parameters from sources:\n"
-      ~ map_sources
-      | yaml(False)
-    ) %}
+{#-
+    Execution module that executes the below `else` Jinja logic in Python and caches the result,
+    yielding a significant speedup of state rendering.
+    Provided by `salt-pip install saltext-formula`. See https://lkubb.github.io/saltext-formula/.
+#}
+{%- if "map.data" in salt %}
+{%-   set mapdata = salt["map.data"](tpldir, sources=map_sources, parameter_dirs=parameter_dirs) %}
+{%- else %}
+{%-   from tplroot ~ "/libmapstack.jinja" import mapstack with context %}
 
-{#- Load formula parameters values #}
-{%- set _formula_matchers = ["defaults.yaml"] + map_sources %}
+{#-   Load meta configuration #}
+{%-   set _map_settings = mapstack(
+        matchers=["map_jinja.yaml"],
+        defaults={
+          "values": {"sources": map_sources}
+        },
+        log_prefix="map.jinja configuration: ",
+      )
+      | load_yaml
+%}
 
-{%- set _formula_settings = mapstack(
-      matchers=_formula_matchers,
-      dirs=[formula_param_dir],
-      defaults={
-        "values": {},
-        "merge_strategy": salt["config.get"](tplroot ~ ":strategy", None),
-        "merge_lists": salt["config.get"](tplroot ~ ":merge_lists", False),
-      },
-      log_prefix="map.jinja: ",
-    )
-    | load_yaml %}
+{%-   set map_sources = _map_settings | traverse("values:sources") %}
+{%-   do salt["log.debug"](
+        "map.jinja: load parameters from sources:\n"
+        ~ map_sources
+        | yaml(False)
+      )
+%}
 
-{#- Make sure to track `map.jinja` configuration with `_mapdata` #}
-{%- do _formula_settings["values"].update(
-      {
-        "map_jinja": _map_settings["values"]
-      }
-    ) %}
+{#-   Load formula configuration #}
+{%-   set _formula_matchers = ["defaults.yaml"] + map_sources %}
 
-{%- do salt["log.debug"]("map.jinja: save parameters in variable 'mapdata'") %}
-{%- set mapdata = _formula_settings["values"] %}
+{%-   set _formula_settings = mapstack(
+        matchers=_formula_matchers,
+        dirs=parameter_dirs,
+        defaults={
+          "values": {},
+          "merge_strategy": salt["config.get"](tplroot ~ ":strategy", None),
+          "merge_lists": salt["config.get"](tplroot ~ ":merge_lists", False),
+        },
+        log_prefix="map.jinja: ",
+      )
+      | load_yaml
+%}
 
-{#- Per formula post-processing of `mapdata` if it exists #}
-{%- do salt["log.debug"]("map.jinja: post-processing of 'mapdata'") %}
-{%- include tplroot ~ "/post-map.jinja" ignore missing %}
+{#-   Make sure to track `map.jinja` configuration with `_mapdata` #}
+{%-   do _formula_settings["values"].update(
+        {
+          "map_jinja": _map_settings["values"]
+        }
+      )
+%}
+
+{%-   do salt["log.debug"]("map.jinja: save parameters in variable 'mapdata'") %}
+{%-   set mapdata = _formula_settings["values"] %}
+
+{#-   Optional per-formula post-processing of `mapdata` #}
+{%-   do salt["log.debug"]("map.jinja: post-processing of 'mapdata'") %}
+{%-   include tplroot ~ "/post-map.jinja" ignore missing %}
+{%- endif %}

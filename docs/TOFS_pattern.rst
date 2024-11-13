@@ -330,7 +330,7 @@ We can simplify the ``conf.sls`` with the new ``files_switch`` macro to use in t
 
 In ``libtofs.jinja``, we define this new macro ``files_switch``.
 
-.. literalinclude:: ../template/libtofs.jinja
+.. literalinclude:: ../podman/libtofs.jinja
    :caption: /srv/saltstack/salt-formulas/ntp-saltstack-formula/ntp/libtofs.jinja
    :language: jinja
 

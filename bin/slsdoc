@@ -319,7 +319,16 @@ class StateRegistry:
                     # given package.init, package.install and package.clean,
                     # only dump init and clean
                     parent = self.lookup(state_id[:-1], tree=True)
-                    if len(list(x for x, y in parent.items() if not isinstance(y, dict))) == 3 and "init" in parent and "clean" in parent:
+                    if (
+                        len(
+                            list(
+                                x for x, y in parent.items() if not isinstance(y, dict)
+                            )
+                        )
+                        == 3
+                        and "init" in parent
+                        and "clean" in parent
+                    ):
                         continue
                 yield self.states[state_id]
 
@@ -631,9 +640,7 @@ class DepthRenderer(Renderer):
 
     def _render_single(self, states, prefix):
         target = self._get_target(prefix)
-        rendr = self.delegate(
-            target=target, prefix=prefix, **self.opts["single_opts"]
-        )
+        rendr = self.delegate(target=target, prefix=prefix, **self.opts["single_opts"])
         rendr.render(states)
 
     def _render_index(self, states, indices, prefix=None):
@@ -712,7 +719,7 @@ class SaltAutodoc:
         for file in self.glob(src):
             if str(file.relative_to(self.base)).startswith(tuple(self.ignore)):
                 continue
-            with open(file, "r") as f:
+            with open(file) as f:
                 text = "".join(f.readlines())
             try:
                 comment = self.find_comment(text)
@@ -733,8 +740,7 @@ class SaltAutodoc:
         """
         Returns Path objects pointing to Salt states provided by this formula.
         """
-        for path in (self.base / Path(src)).rglob("*.sls"):
-            yield path
+        yield from (self.base / Path(src)).rglob("*.sls")
 
     def find_comment(self, text):
         """
@@ -784,7 +790,10 @@ if __name__ == "__main__":
     sort_list = options.get("sort_list", "auto")
     if sort_list == "auto":
         init = (base / "init.sls").read_text()
-        sort_list = ["init", "clean"] + re.findall(r"\n[^\S\n]+\-\ \.(\S+)", re.findall(r"include:((?:\n(?:[^\S\n]+|\{\%.*)\S.*)+)", init)[0])
+        sort_list = ["init", "clean"] + re.findall(
+            r"\n[^\S\n]+\-\ \.(\S+)",
+            re.findall(r"include:((?:\n(?:[^\S\n]+|\{\%.*)\S.*)+)", init)[0],
+        )
 
     reg = StateRegistry(
         avoid_init_dup=options.get("avoid_init_dup", True),
