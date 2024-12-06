@@ -31,7 +31,7 @@
     }) -%}
   {%- elif mapdata.compose.install == "podman" -%}
     {%- if mapdata.compose.podman_compose_rev %}
-      {%- set rev = '' if mapdata.compose.podman_compose_rev is sameas true else '@{}'.format(mapdata.compose.podman_compose_rev) %}
+      {%- set rev = "" if mapdata.compose.podman_compose_rev is sameas true else "@{}".format(mapdata.compose.podman_compose_rev) %}
       {%- do mapdata.update({"_compose": "git+" ~ mapdata.lookup.compose.podman.repo ~ rev}) -%}
     {%- else %}
       {%- set p = mapdata.lookup.compose.podman -%}

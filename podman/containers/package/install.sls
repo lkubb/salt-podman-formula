@@ -118,7 +118,7 @@ Container {{ cnt_name }} systemd unit is installed:
     - source: {{ files_switch(
                     [cnt_name ~ ".service.j2", "container.service.j2"],
                     config=podman,
-                    lookup="Container {{ cnt_name }} systemd unit is installed",
+                    lookup="Container {} systemd unit is installed".format(cnt_name),
                  )
               }}
     - mode: '0644'
