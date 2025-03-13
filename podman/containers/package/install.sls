@@ -15,9 +15,32 @@ include:
   - {{ sls_service_running }}
 {%- endif %}
 
+{%- if podman.lookup.containers.user %}
+{%-   set username = podman.lookup.containers.user.name %}
+User account {{ username }} is present:
+  group.present:
+    - name: {{ username }}
+    - system: {{ podman.lookup.user.system }}
+    - gid: {{ podman.lookup.containers.user.get('gid', 'null') }}
+
+  user.present:
+    - name: {{ username }}
+    - home: {{ podman.lookup.containers.base }}
+    - createhome: true
+    - system: {{ podman.lookup.user.system }}
+    {%- for x in ['uid', 'gid'] %}
+    - {{ x }}: {{ podman.lookup.containers.user.get(x, 'null') }}
+    {%- endfor %}
+    - require_in:
+        - User session for {{ username }} is initialized at boot
+{%- endif %}
+
 {%- for cnt_name, cnt in podman.containers.items() %}
 {%-   set rootless = cnt.get("rootless", True) %}
 {%-   if rootless %}
+{%-     if podman.lookup.containers.user %}
+{%-       set username = podman.lookup.containers.user.name %}
+{%-     else %}
 
 User account for container {{ cnt_name }} is present:
   user.present:
@@ -25,29 +48,31 @@ User account for container {{ cnt_name }} is present:
     - home: {{ podman.lookup.containers.base | path_join(cnt_name) }}
     - createhome: true
     - usergroup: true
-    # (on Debian 11) subuid/subgid are only added automatically for non-system users
-    - system: false
+    - system: {{ podman.lookup.user.system }}
 
-User session for container {{ cnt_name }} is initialized at boot:
+{%-       set username = cnt_name %}
+{%-     endif %}
+
+User session for {{ username }} is initialized at boot:
   compose.lingering_managed:
-    - name: {{ cnt_name }}
+    - name: {{ username }}
     - enable: true
     - require:
-      - user: {{ cnt_name }}
+      - user: {{ username }}
 
-Podman API for container {{ cnt_name }} is enabled:
+Podman API for {{ username }} is enabled:
   compose.systemd_service_enabled:
     - name: podman.socket
-    - user: {{ cnt_name }}
+    - user: {{ username }}
     - require:
-      - User session for container {{ cnt_name }} is initialized at boot
+      - User session for {{ username }} is initialized at boot
 
-Podman API for container {{ cnt_name }} is available:
+Podman API for {{ username }} is available:
   compose.systemd_service_running:
     - name: podman.socket
-    - user: {{ cnt_name }}
+    - user: {{ username }}
     - require:
-      - Podman API for container {{ cnt_name }} is enabled
+      - Podman API for {{ username }} is enabled
 {%-   endif %}
 
 {%-   if cnt.get("env_secrets") %}
@@ -70,7 +95,7 @@ Container {{ cnt_name }} secrets are present:
 {%-     endif %}
     - require:
 {%-     if rootless %}
-      - Podman API for container {{ cnt_name }} is available
+      - Podman API for {{ username }} is available
 {%-     else %}
       - sls: {{ sls_service_running }}
 {%-     endif %}
@@ -102,18 +127,24 @@ Container {{ cnt_name }} is present:
     - {{ cparam }}: {{ cval | json }}
 {%-   endfor %}
 {%-   if rootless %}
-    - user: {{ cnt_name }}
+    - user: {{ username }}
 {%-   endif %}
     - require:
 {%-   if rootless %}
-      - Podman API for container {{ cnt_name }} is available
+      - Podman API for {{ username }} is available
 {%-   else %}
       - sls: {{ sls_service_running }}
 {%-   endif %}
 
+{%- if podman.lookup.containers.user %}
+{%-  set userunitdir = podman.lookup.containers.base | path_join(".config", "systemd", "user") %}
+{%- else %}
+{%-  set userunitdir = podman.lookup.containers.base | path_join(cnt_name, ".config", "systemd", "user") %}
+{%- endif %}
+
 Container {{ cnt_name }} systemd unit is installed:
   file.managed:
-    - name: {{ ((podman.lookup.containers.base | path_join(cnt_name, ".config", "systemd", "user")) if rootless else "/etc/systemd/system")
+    - name: {{ ( userunitdir if rootless else "/etc/systemd/system" )
                  | path_join(cnt_name ~ ".service") }}
     - source: {{ files_switch(
                     [cnt_name ~ ".service.j2", "container.service.j2"],
@@ -131,12 +162,12 @@ Container {{ cnt_name }} systemd unit is installed:
     - context:
         name: {{ cnt_name }}
         generate_params: {{ cnt.get("generate_params", {}) | json }}
-        user: {{ cnt_name if rootless else "root" }}
+        user: {{ username if rootless else "root" }}
 {%-   if rootless %}
   module.run:
     - user_service.daemon_reload:
-        - user: {{ cnt_name }}
+        - user: {{ username }}
     - onchanges:
-      - file: {{ podman.lookup.containers.base | path_join(cnt_name, ".config", "systemd", "user", cnt_name ~ ".service") }}
+      - file: {{ userunitdir | path_join(cnt_name ~ ".service") }}
 {%-   endif %}
 {%- endfor %}
