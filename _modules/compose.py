@@ -1065,14 +1065,12 @@ def has_changes(
         # env_file content changes are not reflected in the hash, but
         # as of podman-compose v1.2.0, the containers are created with their contents
         # (because of https://github.com/containers/podman-compose/pull/949)
+        env_files = definitions.get("services", {}).get(cnt["Labels"].get("com.docker.compose.service", {}), {}).get("env_file")
+
         if (
             not HAS_PODMAN_COMPOSE
             or "PODMAN_SYSTEMD_UNIT" not in cnt["Labels"]
-            or not (
-                env_files := definitions.get("services", {})
-                .get(cnt["Labels"]["com.docker.compose.service"], {})
-                .get("env_file")
-            )
+            or not env_files
         ):
             continue
         if (
