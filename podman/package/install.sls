@@ -110,7 +110,8 @@ Restart salt minion on installation of toml:
       - Toml and Podman python libraries are installed
 {%- endif %}
 
-# those are installed by the Debian package automatically
+# those are installed by the distribution packages automatically
+{%- if podman.lookup.service.install_unit_files %}
 Podman unit files are installed:
   file.managed:
     - names:
@@ -138,6 +139,7 @@ Podman unit files are installed:
       - Podman is installed
     - context:
         podman: {{ podman | json }}
+{%- endif %}
 
 {%- if podman.compose.install %}
 {%-   if podman.compose.install == "docker" %}
