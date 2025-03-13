@@ -53,6 +53,7 @@ Debian unstable repository is inactive:
 Debian repositories are unpinned:
   file.absent:
     - name: /etc/apt/preferences.d/99pin-unstable
+{%-   endif %}
 {%- endif %}
 
 {%- if podman.compose.install %}
