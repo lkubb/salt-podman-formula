@@ -163,7 +163,20 @@ podman:
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
     containers:
+      # if "user" is empty (the default), a user and group named after the container will be managed
+      user: {}
+      # alternatively, a custom user and group to use can be specified
+      user:
+        name: autopod
+        # optional UID/GID to use if automatic allocation is not desired
+        uid: 900
+        gid: 900
+      # the base directory under which container home directories will be created
+      #   or the user home directory if "user" is not empty
       base: /opt/containers
+    user:
+      # whether users should be created as system users
+      system: false
     enablerepo: alvistack
     required_pkgs:
       - git

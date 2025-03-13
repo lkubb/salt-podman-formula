@@ -38,7 +38,11 @@ values:
       seccomp: /usr/share/containers/seccomp.json
       storage: storage.conf
     containers:
+      user: {}
       base: /opt/containers
+    user:
+      # on Debian 11 and openSUSE subuid/subgid are added automatically for non-system users
+      system: false
     required_pkgs:
       - git
       - python3-pip

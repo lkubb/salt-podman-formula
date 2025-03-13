@@ -37,7 +37,11 @@ lookup:
     seccomp: /usr/share/containers/seccomp.json
     storage: storage.conf
   containers:
+    user:
+      name: foo
     base: /opt/containers
+  user:
+    system: false
   required_pkgs:
     - git
     - python3-pip
