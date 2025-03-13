@@ -14,4 +14,6 @@ values:
   lookup:
     pkg_manager: zypper
     repos: {}
+    service:
+      install_unit_files: false
 ...
