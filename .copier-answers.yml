@@ -50,6 +50,7 @@ lookup:
       docker: /var/run/docker.sock
       podman: /var/run/podman/podman.sock
   service:
+    install_unit_files: true
     name: podman
     path: /etc/systemd/system/{name}.service
     socket_path: /etc/systemd/system/{name}.socket

@@ -110,8 +110,9 @@ Restart salt minion on installation of toml:
       - Toml and Podman python libraries are installed
 {%- endif %}
 
-# those are installed by the distribution packages automatically
+{#- those are installed by the distribution packages automatically #}
 {%- if podman.lookup.service.install_unit_files %}
+
 Podman unit files are installed:
   file.managed:
     - names:
